@@ -152,12 +152,52 @@ class TilePuzzle(object):
                 boardCopy.board[m][n] = self.board[m][n]
         return boardCopy
         #pass
+    
+    def testIfPossible(self, move):
+        testBoard = TilePuzzle(self.get_board()).copy()
+        testMove = testBoard.perform_move(move)
+        return testMove
 
     def successors(self):
         listOfTuples = []                                 #create empty list that takes the tuples that will be made, this will be converted into a tuple later
         #listOfTuples = [0] * (self.boardRowLength * self.boardColLength) #use this in case the previous line doesn't work, also replace the listOfTuples.append() in the following for loops.
         currentBoard = TilePuzzle(self.board).copy() #this NEEDS to be set as a LightsOutPuzzle, I spent hours trying to figure out why self.board and self.board.copy() didn't work. The copy() only works with LightsOutPuzzle() data types.
 
+        upTest = currentBoard.testIfPossible("up")
+        downTest = currentBoard.testIfPossible("down")
+        leftTest = currentBoard.testIfPossible("left")
+        rightTest = currentBoard.testIfPossible("right")
+
+        if upTest == True:
+            move = "up"
+            copyCurrentBoard = currentBoard.copy()
+            copyCurrentBoard.perform_move(move)
+            successorTuple = (move, copyCurrentBoard)
+            listOfTuples.append(successorTuple)
+        
+        if downTest == True:
+            move = "down"
+            copyCurrentBoard = currentBoard.copy()
+            copyCurrentBoard.perform_move(move)
+            successorTuple = (move, copyCurrentBoard)
+            listOfTuples.append(successorTuple)
+
+        if leftTest == True:
+            move = "left"
+            copyCurrentBoard = currentBoard.copy()
+            copyCurrentBoard.perform_move(move)
+            successorTuple = (move, copyCurrentBoard)
+            listOfTuples.append(successorTuple)
+        
+        if rightTest == True:
+            move = "right"
+            copyCurrentBoard = currentBoard.copy()
+            copyCurrentBoard.perform_move(move)
+            successorTuple = (move, copyCurrentBoard)
+            listOfTuples.append(successorTuple)
+
+
+        """
         for m in range(0, self.boardRowLength):
             for n in range(0, self.boardColLength):
                 move = (m, n)                                        #create move tuple
@@ -166,6 +206,7 @@ class TilePuzzle(object):
                 successorBoard = copyCurrentBoard
                 successorTuple = (move, successorBoard)
                 listOfTuples.append(successorTuple)
+        """
                 
         tupleOfTuples = tuple(listOfTuples)            #convert the list into a tuple by casting it into a tuple
         return tupleOfTuples
@@ -272,3 +313,28 @@ scrambleTest1.scramble(1)
 print(scrambleTest1.get_board())
 scrambleTest1.scramble(1)
 print(scrambleTest1.get_board())
+
+print("\nis_solved")
+p = TilePuzzle([[1, 2], [3, 0]])
+print(p.is_solved())
+p = TilePuzzle([[0, 1], [3, 2]])
+print(p.is_solved())
+
+print("\ncopy")
+p = create_tile_puzzle(3, 3) 
+p2 = p.copy()
+print(p.get_board() == p2.get_board())
+p = create_tile_puzzle(3, 3)
+p2 = p.copy()
+p.perform_move("left")
+print(p.get_board() == p2.get_board())
+
+print("\nsuccessors")
+p = create_tile_puzzle(3, 3)
+for move, new_p in p.successors():
+    print(move, new_p.get_board())
+print("")
+b = [[1,2,3], [4,0,5], [6,7,8]] 
+p = TilePuzzle(b)
+for move, new_p in p.successors():
+    print(move, new_p.get_board())
