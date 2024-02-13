@@ -104,14 +104,34 @@ class TilePuzzle(object):
     def scramble(self, num_moves):
         for i in range(0, num_moves):
             move = random.random()
+            failedMoves = []
             if move < 0.25:
-                self.perform_move("up")
-            elif move >= 0.25 and move < 0.5:
+                self.perform_move("up")                
+                """
+                worked = self.perform_move("up")
+                if worked == False:  #intended to test whether or not the move was valid, if invalid, reroll
+                    failedMoves.append("up")
+                    while move < 0.25:
+                        move = random.random()
+                """
+            if move >= 0.25 and move < 0.5:
                 self.perform_move("down")
-            elif move >= 0.5 and move < 0.75:
+                """
+                if worked == False:
+                    i = i - 1
+                """
+            if move >= 0.5 and move < 0.75:
                 self.perform_move("left")
-            elif move >= 0.75:
+                """
+                if worked == False:
+                    i = i - 1
+                """
+            if move >= 0.75:
                 self.perform_move("down")
+                """
+                if worked == False:
+                    i = i - 1
+                """
         #pass
 
     def is_solved(self):
