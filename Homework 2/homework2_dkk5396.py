@@ -51,51 +51,67 @@ class TilePuzzle(object):
     
     def get_empty_tile(self):
         currentBoard = self.get_board().copy()
-        for row in currentBoard:
-            for col in row:
-                if col == 0:
-                    return (row, col)            #tuple that contains (row, col)
+        boardRow = self.boardRowLength
+        boardCol = self.boardColLength
+        for r in range(0, boardRow):
+            for c in range(0, boardCol):
+                if currentBoard[r][c] == 0:
+                    return (r, c)            #tuple that contains (row, col)
 
     def perform_move(self, direction):
-        #emptyTile = self.get_empty_tile()
-        #print(emptyTile)
-        #tileRow = emptyTile[0]
-        #tileCol = emptyTile[1]
-        tileRow = len(self.get_board()) - 1
-        tileCol = len(self.get_board()[0]) - 1
+        emptyTile = self.get_empty_tile() #finds the empty tile
+        #print(emptyTile)                 #prints location of the empty tile
+        tileRow = emptyTile[0]
+        tileCol = emptyTile[1]
+        #tileRow = len(self.get_board()) - 1
+        #tileCol = len(self.get_board()[0]) - 1
         if direction == "up":
             if tileRow - 1 >= 0: #check if this and all the others are done right
                 storeTile = self.board[tileRow - 1][tileCol]
                 self.board[tileRow][tileCol] = storeTile
                 self.board[tileRow - 1][tileCol] = 0
                 return True
+            else:
+                return False
         elif direction == "down":
             if tileRow + 1 < self.boardRowLength:
                 storeTile = self.board[tileRow + 1][tileCol]
                 self.board[tileRow][tileCol] = storeTile
                 self.board[tileRow + 1][tileCol] = 0
                 return True
+            else:
+                return False
         elif direction == "left":
             if tileCol - 1 >= 0:
                 storeTile = self.board[tileRow][tileCol - 1]
                 self.board[tileRow][tileCol] = storeTile
                 self.board[tileRow][tileCol - 1] = 0
                 return True
+            else:
+                return False
         elif direction == "right":
             if tileCol + 1 < self.boardColLength:
                 storeTile = self.board[tileRow][tileCol + 1]
                 self.board[tileRow][tileCol] = storeTile
                 self.board[tileRow][tileCol + 1] = 0
                 return True
+            else:
+                return False
         else:
             return False
         #pass
 
     def scramble(self, num_moves):
-        for m in range(0, self.boardRowLength):
-            for n in range(0, self.boardColLength):
-                if random.random() < 0.5:
-                    self.perform_move(m, n)
+        for i in range(0, num_moves):
+            move = random.random()
+            if move < 0.25:
+                self.perform_move("up")
+            elif move >= 0.25 and move < 0.5:
+                self.perform_move("down")
+            elif move >= 0.5 and move < 0.75:
+                self.perform_move("left")
+            elif move >= 0.75:
+                self.perform_move("down")
         #pass
 
     def is_solved(self):
@@ -229,3 +245,10 @@ print(p.get_board())
 p = create_tile_puzzle(3, 3) 
 print( p.perform_move("down"))
 print(p.get_board())
+
+print("\nscramble")
+scrambleTest1 = create_tile_puzzle(3, 3)
+scrambleTest1.scramble(1)
+print(scrambleTest1.get_board())
+scrambleTest1.scramble(1)
+print(scrambleTest1.get_board())
