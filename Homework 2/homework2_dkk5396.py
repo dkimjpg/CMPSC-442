@@ -212,9 +212,21 @@ class TilePuzzle(object):
         return tupleOfTuples
         #pass
 
+    def iddfs_helper(self, limit, moves): #yields all solutions to the current board of length no more than  limit which are continuations of the provided move list.
+        #this method should be recursive since it has to increase the limit at each level
+        print()
+
     # Required
     def find_solutions_iddfs(self):
-        pass
+        """
+        How IDDFS (Iterative Deepening Depth-First Search) works:
+        Run DFS, but only to a certain limit of levels. Start from depth limit 0, and each time that the goal node is not found, increment the depth limit.
+        For each depth limit, DFS is running until the goal node is found. 
+        This takes longer than BFS, but uses up less space. This is also faster than DFS.
+        """
+
+        print()
+        #pass
 
     # Required
     def find_solution_a_star(self):
