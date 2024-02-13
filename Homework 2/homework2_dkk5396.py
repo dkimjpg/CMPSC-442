@@ -24,12 +24,16 @@ def create_tile_puzzle(rows, cols): #check if I made this right
     makeBoard = []
     for m in range(0, rows):
         rowList = []
-        for n in range(0, cols):
-            rowList.append(False)
+        for n in range(1, cols + 1):
+            if m == rows - 1 and n == cols:
+                rowList.append(0)
+            else:
+                rowList.append(n + (m * cols))
         makeBoard.append(rowList)
+    
     finalBoard = TilePuzzle(makeBoard)
     return finalBoard
-    pass
+    #pass
 
 class TilePuzzle(object):
     
@@ -53,9 +57,12 @@ class TilePuzzle(object):
                     return (row, col)            #tuple that contains (row, col)
 
     def perform_move(self, direction):
-        emptyTile = self.get_empty_tile()
-        tileRow = emptyTile[0]
-        tileCol = emptyTile[1]
+        #emptyTile = self.get_empty_tile()
+        #print(emptyTile)
+        #tileRow = emptyTile[0]
+        #tileCol = emptyTile[1]
+        tileRow = len(self.get_board()) - 1
+        tileCol = len(self.get_board()[0]) - 1
         if direction == "up":
             if tileRow - 1 >= 0: #check if this and all the others are done right
                 storeTile = self.board[tileRow - 1][tileCol]
@@ -201,3 +208,24 @@ class DominoesGame(object):
 
 ############################################################
 
+#TilePuzzle Infrastructure Tests
+print("TilePuzzle Infrastructure Tests")
+print("getBoard")
+p = TilePuzzle([[1, 2], [3, 0]])
+print(p.get_board())
+p = TilePuzzle([[0, 1], [3, 2]])
+print(p.get_board())
+
+print("\ncreate_tile_puzzle")
+p = create_tile_puzzle(3, 3) 
+print(p.get_board())
+p = create_tile_puzzle(2, 4)
+print(p.get_board())
+
+print("\nperform_move")
+p = create_tile_puzzle(3, 3) 
+print(p.perform_move("up"))
+print(p.get_board())
+p = create_tile_puzzle(3, 3) 
+print( p.perform_move("down"))
+print(p.get_board())
