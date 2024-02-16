@@ -214,7 +214,45 @@ class TilePuzzle(object):
 
     def iddfs_helper(self, limit, moves): #yields all solutions to the current board of length no more than  limit which are continuations of the provided move list.
         #this method should be recursive since it has to increase the limit at each level
-        print()
+        #I think that moves is supposed to be the current list (or whatever I used to collect the moves) of moves that I need to test to see if they yield anything
+        #Actually, moves is supposed to be a list of strings that contain the all the moves leading up to the current board
+        currentBoard = TilePuzzle(self.get_board()).copy()
+        if limit < 0: #think something's wrong with this
+            return False
+        
+        #from here, I should probably iterate through moves and use recursion to explore each move's possible moves until the limit is reached.
+        if currentBoard.is_solved() == True:
+            return moves
+        for i in range(0, limit + 1):
+            if currentBoard.testIfPossible("up") == True:
+                upBoard = TilePuzzle(currentBoard.get_board()).copy()
+                upBoard.perform_move("up")
+                moveList = moves.append("up")
+                if upBoard.iddfs_helper(limit - 1, moveList) == False:
+                    moveList.pop()
+            if currentBoard.testIfPossible("down") == True:
+                upBoard = TilePuzzle(currentBoard.get_board()).copy()
+                upBoard.perform_move("down")
+                moveList = moves.append("down")
+                if upBoard.iddfs_helper(limit - 1, moveList) == False:
+                    moveList.pop()
+            if currentBoard.testIfPossible("left") == True:
+                upBoard = TilePuzzle(currentBoard.get_board()).copy()
+                upBoard.perform_move("left")
+                moveList = moves.append("left")
+                if upBoard.iddfs_helper(limit - 1, moveList) == False:
+                    moveList.pop()
+            if currentBoard.testIfPossible("right") == True:
+                upBoard = TilePuzzle(currentBoard.get_board()).copy()
+                upBoard.perform_move("right")
+                moveList = moves.append("right")
+                if upBoard.iddfs_helper(limit - 1, moveList) == False:
+                    moveList.pop()
+            
+            #if self.iddfs_helper(limit - i, ): #don't think I'll need this
+            #    return
+        print("delete this print statement 1")
+
 
     # Required
     def find_solutions_iddfs(self):
@@ -224,8 +262,14 @@ class TilePuzzle(object):
         For each depth limit, DFS is running until the goal node is found. 
         This takes longer than BFS, but uses up less space. This is also faster than DFS.
         """
-
-        print()
+        limit = 0
+        while(True): #assuming the board is solvable
+            if self.iddfs_helper(limit, ):
+                return moves #come up with something for the list of moves
+            limit = limit + 1
+        
+        print("got out of while loop")
+        return False #just putting this here so something is outputted at the end somehow
         #pass
 
     # Required
