@@ -138,10 +138,18 @@ class TilePuzzle(object):
     def is_solved(self):
         if self.get_board() == []:
             return False
+        count = 1
         for m in range(0, self.boardRowLength):
             for n in range(0, self.boardColLength):
-                if self.get_board()[m][n] == True:
+                if m == self.boardRowLength - 1 and n == self.boardColLength - 1:
+                    if self.get_board()[m][n] == 0:
+                        return True
+                    else:
+                        return False
+                if self.get_board()[m][n] != count:
                     return False
+                count = count + 1
+        #return True
         #pass
 
     def copy(self):
@@ -232,22 +240,22 @@ class TilePuzzle(object):
                 if upBoard.iddfs_helper(limit - 1, moveList) == False:
                     moveList.pop()
             if currentBoard.testIfPossible("down") == True:
-                upBoard = TilePuzzle(currentBoard.get_board()).copy()
-                upBoard.perform_move("down")
+                downBoard = TilePuzzle(currentBoard.get_board()).copy()
+                downBoard.perform_move("down")
                 moveList = moves.append("down")
-                if upBoard.iddfs_helper(limit - 1, moveList) == False:
+                if downBoard.iddfs_helper(limit - 1, moveList) == False:
                     moveList.pop()
             if currentBoard.testIfPossible("left") == True:
-                upBoard = TilePuzzle(currentBoard.get_board()).copy()
-                upBoard.perform_move("left")
+                leftBoard = TilePuzzle(currentBoard.get_board()).copy()
+                leftBoard.perform_move("left")
                 moveList = moves.append("left")
-                if upBoard.iddfs_helper(limit - 1, moveList) == False:
+                if leftBoard.iddfs_helper(limit - 1, moveList) == False:
                     moveList.pop()
             if currentBoard.testIfPossible("right") == True:
-                upBoard = TilePuzzle(currentBoard.get_board()).copy()
-                upBoard.perform_move("right")
+                rightBoard = TilePuzzle(currentBoard.get_board()).copy()
+                rightBoard.perform_move("right")
                 moveList = moves.append("right")
-                if upBoard.iddfs_helper(limit - 1, moveList) == False:
+                if rightBoard.iddfs_helper(limit - 1, moveList) == False:
                     moveList.pop()
             
             #if self.iddfs_helper(limit - i, ): #don't think I'll need this
@@ -275,6 +283,10 @@ class TilePuzzle(object):
         return False #just putting this here so something is outputted at the end somehow
         #pass
 
+    def getManhattanDistanceSum(self, board):
+        boardList = board.get_board()
+
+    
     # Required
     def find_solution_a_star(self):
         """
@@ -289,8 +301,14 @@ class TilePuzzle(object):
         Once the board is found, add it to the list. Check if the board is solved, and if it is, return the path that was taken to get to it.
         Otherwise, the algorithm goes back to the beginning of the while loop.
         """
+        currentBoard = TilePuzzle(self.get_board()).copy()
+        reverseMove = "none because this is the start of the puzzle"
+        movesList = []
+        while(True):
+            if currentBoard.testIfPossible("up") == True and reverseMove != "up":
+                copyBoard = TilePuzzle(currentBoard.get_board()).copy()
+                copyBoard.perform_move("up")
 
-        
         #pass
 
 ############################################################
