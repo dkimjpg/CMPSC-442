@@ -41,6 +41,16 @@ def get2dCoords(boardList, target):
             if target in x:
                 return (i, x.index(target))
 
+def calculateReverseMove(move):
+    if move == "up":
+        return "down"
+    if move == "down":
+        return "up"
+    if move == "left":
+        return "right"
+    if move == "right":
+        return "left"
+
 class TilePuzzle(object):
     
     # Required
@@ -313,9 +323,6 @@ class TilePuzzle(object):
                 totalSum = totalSum + distanceSum           #adds the distance sum to the total sum
         print(totalSum) #check if it worked properly
         return totalSum
-
-
-
     
     # Required
     def find_solution_a_star(self):
@@ -327,7 +334,7 @@ class TilePuzzle(object):
         For all possible moves, create a copy of the board and perform the move. Then get the Manhattan Distance of each tile and get the sum of all Manhattan Distances on the board.
             May also want to make a helper function that gets the sum of all Manhattan Distances (probably should send the whole board to the function, return a number)
         Next, get the following stats, (sum of Manhattan Distances, path(should be a list of strings),  move(should be a string)), and put this tuple in a list (or priority queue)
-        Go through the list and find the board with the smallest sum of Depth and Manhattan Distance (or use a priority queue and use .get() to get the smallest sum)
+        After all moves are processed, go through the list and find the board with the smallest sum of Depth and Manhattan Distance (or use a priority queue and use .get() to get the smallest sum)
         Once the board is found, add it to the list. Check if the board is solved, and if it is, return the path that was taken to get to it.
         Otherwise, the algorithm goes back to the beginning of the while loop.
         """
@@ -335,11 +342,39 @@ class TilePuzzle(object):
         reverseMove = "none because this is the start of the puzzle"
         movesList = []
         while(True):
+            moveQueue = PriorityQueue()
             if currentBoard.testIfPossible("up") == True and reverseMove != "up":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("up")
                 sum = copyBoard.getManhattanDistanceSum(copyBoard)
                 moveTuple = (sum, movesList, "up")
+                moveQueue.put((sum, moveTuple)) #did (sum, moveTuple) in case PriorityQueue only worked with tuples with only two elements
+            if currentBoard.testIfPossible("down") == True and reverseMove != "down":
+                copyBoard = TilePuzzle(currentBoard.get_board()).copy()
+                copyBoard.perform_move("down")
+                sum = copyBoard.getManhattanDistanceSum(copyBoard)
+                moveTuple = (sum, movesList, "down")
+                moveQueue.put((sum, moveTuple))
+            if currentBoard.testIfPossible("left") == True and reverseMove != "left":
+                copyBoard = TilePuzzle(currentBoard.get_board()).copy()
+                copyBoard.perform_move("left")
+                sum = copyBoard.getManhattanDistanceSum(copyBoard)
+                moveTuple = (sum, movesList, "left")
+                moveQueue.put((sum, moveTuple))
+            if currentBoard.testIfPossible("right") == True and reverseMove != "right":
+                copyBoard = TilePuzzle(currentBoard.get_board()).copy()
+                copyBoard.perform_move("right")
+                sum = copyBoard.getManhattanDistanceSum(copyBoard)
+                moveTuple = (sum, movesList, "right")
+                moveQueue.put((sum, moveTuple))
+            chosenMoveTuple = moveQueue.get() #this should yield the moveTuple
+            chosenMove = chosenMoveTuple[2]
+            reverseMove = calculateReverseMove(chosenMove) #chosenMove should be the move itself, which should be a string
+            movesList.append(chosenMove)
+            currentBoard.perform_move(chosenMove)
+            if currentBoard.is_solved() == True:
+                return movesList
+
 
         #pass
 
