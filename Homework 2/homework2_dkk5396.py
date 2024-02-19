@@ -12,6 +12,7 @@ student_name = "David Kim"
 import math
 import random
 from itertools import permutations
+from queue import PriorityQueue
 
 
 ############################################################
@@ -263,9 +264,11 @@ class TilePuzzle(object):
         This takes longer than BFS, but uses up less space. This is also faster than DFS.
         """
         limit = 0
+        moves = []
         while(True): #assuming the board is solvable
-            if self.iddfs_helper(limit, ):
-                return moves #come up with something for the list of moves
+            self.iddfs_helper(limit, moves)
+            if len(moves) != 0:                  #if moves list is not empty, then the solution has been found, return the list of moves
+                return moves                     #come up with something for the list of moves
             limit = limit + 1
         
         print("got out of while loop")
@@ -274,7 +277,21 @@ class TilePuzzle(object):
 
     # Required
     def find_solution_a_star(self):
-        pass
+        """
+        Create a list that should contain the current board, then create an infinite while loop. 
+        Within that while loop, make a for loop that iterates through all elements in the list with the boards.
+        For each iteration, look at all possible moves while ignoring any backwards moves (these are moves that reverse progress, like moving down if the previous move was up)
+            May want to make a helper function that checks if any possible moves are backwards.
+        For all possible moves, create a copy of the board and perform the move. Then get the Manhattan Distance of each tile and get the sum of all Manhattan Distances on the board.
+            May also want to make a helper function that gets the sum of all Manhattan Distances (probably should send the whole board to the function, return a number)
+        Next, get the following stats, (sum of Manhattan Distances, path(should be a list of strings),  move(should be a string)), and put this tuple in a list (or priority queue)
+        Go through the list and find the board with the smallest sum of Depth and Manhattan Distance (or use a priority queue and use .get() to get the smallest sum)
+        Once the board is found, add it to the list. Check if the board is solved, and if it is, return the path that was taken to get to it.
+        Otherwise, the algorithm goes back to the beginning of the while loop.
+        """
+
+        
+        #pass
 
 ############################################################
 # Section 2: Grid Navigation
