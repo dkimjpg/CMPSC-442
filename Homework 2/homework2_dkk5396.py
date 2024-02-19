@@ -300,16 +300,21 @@ class TilePuzzle(object):
 
     def getManhattanDistanceSum(self, board): 
         expectedBoardList = [[0 for x in range(self.boardRowLength)] for y in range(self.boardColLength)] #hopefully, this makes a 2d list of only 0 in every element. This makes it so I can start filling it out to make the expected board.
-        print(expectedBoardList) #checking if it worked properly
+        #print("before making expected board")
+        #print(expectedBoardList) #checking if it worked properly
         count = 1
         for m in range(0, self.boardRowLength):
             for n in range(0, self.boardColLength):
-                if m != self.boardRowLength - 1 and n != self.boardColLength - 1: #for the last (bottom right) element of the 2d list, it should skip this and stay as 0
-                    self.get_board()[m][n] = count
+                if m == self.boardRowLength - 1 and n == self.boardColLength - 1: #for the last (bottom right) element of the 2d list, it should skip this and stay as 0
+                    expectedBoardList[m][n] = 0
+                else:
+                    expectedBoardList[m][n] = count
                 count = count + 1
-        print(expectedBoardList) #checking again if it worked properly
+        #print("after making expected board")
+        #print(expectedBoardList) #checking again if it worked properly
 
         boardList = board.get_board()
+        #print(boardList)
         totalSum = 0
         for m in range(0, self.boardRowLength):
             for n in range(0, self.boardColLength):
@@ -317,11 +322,17 @@ class TilePuzzle(object):
                 r1 = m
                 c1 = n
                 expectCoords = get2dCoords(expectedBoardList, boardNum) #looks for value of current tile in the expected board
+                #print("boardNum:")
+                #print(boardNum)
+                #print(r1, c1)
+                #print(expectCoords)                
                 r2 = expectCoords[0]
                 c2 = expectCoords[1]
                 distanceSum = abs(r1 - r2) + abs(c1 - c2)   #calculates the distance sum
+                #print(distanceSum)
+                #print()
                 totalSum = totalSum + distanceSum           #adds the distance sum to the total sum
-        print(totalSum) #check if it worked properly
+        #print(totalSum) #check if it worked properly
         return totalSum
     
     # Required
@@ -339,42 +350,63 @@ class TilePuzzle(object):
         Otherwise, the algorithm goes back to the beginning of the while loop.
         """
         currentBoard = TilePuzzle(self.get_board()).copy()
+        #print("currentBoard")
+        #print(currentBoard.get_board())
         reverseMove = "none because this is the start of the puzzle"
         movesList = []
-        while(True):
+        #while(True):
+        for test in range(0, 20):
             moveQueue = PriorityQueue()
+            #moveList = []
             if currentBoard.testIfPossible("up") == True and reverseMove != "up":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("up")
                 sum = copyBoard.getManhattanDistanceSum(copyBoard)
-                moveTuple = (sum, movesList, "up")
+                print(sum)
+                print("up")
+                moveTuple = (sum, 1 ,movesList, "up") #IMPORTANT note: the 1 shown in the tuple is necessary for the priority queue to work, without it, it will prioritize alphabetical order first, making it prioritize "down" as its movement of choice if there are any ties. This is contrary to what the instruction examples show.
                 moveQueue.put((sum, moveTuple)) #did (sum, moveTuple) in case PriorityQueue only worked with tuples with only two elements
+                #moveList.append((sum, moveTuple))
             if currentBoard.testIfPossible("down") == True and reverseMove != "down":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("down")
                 sum = copyBoard.getManhattanDistanceSum(copyBoard)
-                moveTuple = (sum, movesList, "down")
+                print(sum)
+                print("down")
+                moveTuple = (sum, 2 ,movesList, "down")
                 moveQueue.put((sum, moveTuple))
+                #moveList.append((sum, moveTuple))
             if currentBoard.testIfPossible("left") == True and reverseMove != "left":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("left")
                 sum = copyBoard.getManhattanDistanceSum(copyBoard)
-                moveTuple = (sum, movesList, "left")
+                print(sum)
+                print("left")
+                moveTuple = (sum, 3 ,movesList, "left")
                 moveQueue.put((sum, moveTuple))
+                #moveList.append((sum, moveTuple))
             if currentBoard.testIfPossible("right") == True and reverseMove != "right":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("right")
                 sum = copyBoard.getManhattanDistanceSum(copyBoard)
-                moveTuple = (sum, movesList, "right")
+                print(sum)
+                print("right")
+                moveTuple = (sum, 4 ,movesList, "right")
                 moveQueue.put((sum, moveTuple))
+                #moveList.append((sum, moveTuple))
             chosenMoveTuple = moveQueue.get() #this should yield the moveTuple
-            chosenMove = chosenMoveTuple[2]
+            #print(chosenMoveTuple)
+            #print()
+            chosenMove = chosenMoveTuple[1][3]
+            print("chosenMove:")
+            print(chosenMove)
+            print()
+
             reverseMove = calculateReverseMove(chosenMove) #chosenMove should be the move itself, which should be a string
             movesList.append(chosenMove)
             currentBoard.perform_move(chosenMove)
             if currentBoard.is_solved() == True:
                 return movesList
-
 
         #pass
 
@@ -496,3 +528,16 @@ b = [[1,2,3], [4,0,5], [6,7,8]]
 p = TilePuzzle(b)
 for move, new_p in p.successors():
     print(move, new_p.get_board())
+
+print("\nfinding solutions using a star")
+b = [[4,1,2], [0,5,3], [7,8,6]]
+#print("b")
+#print(b)
+p = TilePuzzle(b)
+print(p.find_solution_a_star())
+
+print()
+b = [[1,2,3], [4,0,5], [6,7,8]]
+print(b)
+p = TilePuzzle(b)
+print(p.find_solution_a_star())
