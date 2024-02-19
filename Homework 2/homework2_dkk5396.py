@@ -36,6 +36,11 @@ def create_tile_puzzle(rows, cols): #check if I made this right
     return finalBoard
     #pass
 
+def get2dCoords(boardList, target):
+        for i, x in enumerate(boardList):
+            if target in x:
+                return (i, x.index(target))
+
 class TilePuzzle(object):
     
     # Required
@@ -283,8 +288,33 @@ class TilePuzzle(object):
         return False #just putting this here so something is outputted at the end somehow
         #pass
 
-    def getManhattanDistanceSum(self, board):
+    def getManhattanDistanceSum(self, board): 
+        expectedBoardList = [[0 for x in range(self.boardRowLength)] for y in range(self.boardColLength)] #hopefully, this makes a 2d list of only 0 in every element. This makes it so I can start filling it out to make the expected board.
+        print(expectedBoardList) #checking if it worked properly
+        count = 1
+        for m in range(0, self.boardRowLength):
+            for n in range(0, self.boardColLength):
+                if m != self.boardRowLength - 1 and n != self.boardColLength - 1: #for the last (bottom right) element of the 2d list, it should skip this and stay as 0
+                    self.get_board()[m][n] = count
+                count = count + 1
+        print(expectedBoardList) #checking again if it worked properly
+
         boardList = board.get_board()
+        totalSum = 0
+        for m in range(0, self.boardRowLength):
+            for n in range(0, self.boardColLength):
+                boardNum = boardList[m][n] #value of current tile that needs to get the distance searched
+                r1 = m
+                c1 = n
+                expectCoords = get2dCoords(expectedBoardList, boardNum) #looks for value of current tile in the expected board
+                r2 = expectCoords[0]
+                c2 = expectCoords[1]
+                distanceSum = abs(r1 - r2) + abs(c1 - c2)   #calculates the distance sum
+                totalSum = totalSum + distanceSum           #adds the distance sum to the total sum
+        print(totalSum) #check if it worked properly
+        return totalSum
+
+
 
     
     # Required
@@ -308,6 +338,8 @@ class TilePuzzle(object):
             if currentBoard.testIfPossible("up") == True and reverseMove != "up":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("up")
+                sum = copyBoard.getManhattanDistanceSum(copyBoard)
+                moveTuple = (sum, movesList, "up")
 
         #pass
 
