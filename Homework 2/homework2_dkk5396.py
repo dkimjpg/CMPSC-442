@@ -427,7 +427,29 @@ class TilePuzzle(object):
 ############################################################
 
 def find_path(start, goal, scene):
-    pass
+    startX = start[0]
+    startY = start[1]
+    goalX = goal[0]
+    goalY = goal[1]
+
+    #checks if the start point or goal point lies on an obstacle (which means to check if the coordinates for either is True), return None if this is the case
+    if scene[startX][startY] == True:
+        return None
+    if scene[goalX][goalY] == True:
+        return None
+    if startX == goalX and startY == goalY: #if start and goal are the same, just return the goal tuple (or start tuple, they're both supposed to be the same anyway)
+        return goal
+    
+    """
+    For the terminating case, since I'll probably use a priority queue because I'm using A star search, if the priority queue is empty,
+    that means that all possible areas have been traversed and it is impossible to reach the goal. This might need to be changes, but
+    for now, it seems to be the best terminating case.
+    BUT NOW THAT I THINK OF IT: I don't thing the priority queue will ever be empty since I'm always adding to it, even if a place has 
+    already been visited.
+    """
+    #Also, make something that checks if it is possible to even move from the start position. Check every possible move, and if all of them fail, return None.
+    
+    #pass
 
 ############################################################
 # Section 3: Linear Disk Movement, Revisited
