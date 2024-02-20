@@ -353,50 +353,58 @@ class TilePuzzle(object):
         #print("currentBoard")
         #print(currentBoard.get_board())
         reverseMove = "none because this is the start of the puzzle"
+        moveQueue = PriorityQueue()
+        depth = 0
         movesList = []
-        #while(True):
-        for test in range(0, 20):
-            moveQueue = PriorityQueue()
+        chosenMoveTuple = (0, 0, [], reverseMove)
+        while(True):
+        #for test in range(0, 20):
+            #moveQueue = PriorityQueue()
             #moveList = []
+            depth = len(movesList)
             if currentBoard.testIfPossible("up") == True and reverseMove != "up":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("up")
-                sum = copyBoard.getManhattanDistanceSum(copyBoard)
-                print(sum)
-                print("up")
-                moveTuple = (sum, 1 ,movesList, "up") #IMPORTANT note: the 1 shown in the tuple is necessary for the priority queue to work, without it, it will prioritize alphabetical order first, making it prioritize "down" as its movement of choice if there are any ties. This is contrary to what the instruction examples show.
+                sum = copyBoard.getManhattanDistanceSum(copyBoard) + depth #NEED TO ADD ManhattanDistanceSum AND the current depth, so that would be the distance of movesList
+                #print(sum)
+                #print("up")
+                moveTuple = (sum, 1 ,movesList, "up", depth) #IMPORTANT note: the 1 shown in the tuple is necessary for the priority queue to work, without it, it will prioritize alphabetical order first, making it prioritize "down" as its movement of choice if there are any ties. This is contrary to what the instruction examples show.
                 moveQueue.put((sum, moveTuple)) #did (sum, moveTuple) in case PriorityQueue only worked with tuples with only two elements
                 #moveList.append((sum, moveTuple))
             if currentBoard.testIfPossible("down") == True and reverseMove != "down":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("down")
-                sum = copyBoard.getManhattanDistanceSum(copyBoard)
-                print(sum)
-                print("down")
-                moveTuple = (sum, 2 ,movesList, "down")
+                sum = copyBoard.getManhattanDistanceSum(copyBoard) + depth
+                #print(sum)
+                #print("down")
+                moveTuple = (sum, 2 ,movesList, "down", depth)
                 moveQueue.put((sum, moveTuple))
                 #moveList.append((sum, moveTuple))
             if currentBoard.testIfPossible("left") == True and reverseMove != "left":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("left")
-                sum = copyBoard.getManhattanDistanceSum(copyBoard)
-                print(sum)
-                print("left")
-                moveTuple = (sum, 3 ,movesList, "left")
+                sum = copyBoard.getManhattanDistanceSum(copyBoard) + depth
+                #print(sum)
+                #print("left")
+                moveTuple = (sum, 3 ,movesList, "left", depth)
                 moveQueue.put((sum, moveTuple))
                 #moveList.append((sum, moveTuple))
             if currentBoard.testIfPossible("right") == True and reverseMove != "right":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("right")
-                sum = copyBoard.getManhattanDistanceSum(copyBoard)
-                print(sum)
-                print("right")
-                moveTuple = (sum, 4 ,movesList, "right")
+                sum = copyBoard.getManhattanDistanceSum(copyBoard) + depth
+                #print(sum)
+                #print("right")
+                moveTuple = (sum, 4 ,movesList, "right", depth)
                 moveQueue.put((sum, moveTuple))
                 #moveList.append((sum, moveTuple))
+            #print(moveQueue.queue[0])
+            #print(moveQueue.queue[1])
+            #print(moveQueue.queue[2])
             chosenMoveTuple = moveQueue.get() #this should yield the moveTuple
-            #print(chosenMoveTuple)
+            print(chosenMoveTuple)
             #print()
+            movesList = chosenMoveTuple[1][2].copy() #copy the list
             chosenMove = chosenMoveTuple[1][3]
             print("chosenMove:")
             print(chosenMove)
@@ -405,7 +413,10 @@ class TilePuzzle(object):
             reverseMove = calculateReverseMove(chosenMove) #chosenMove should be the move itself, which should be a string
             movesList.append(chosenMove)
             currentBoard.perform_move(chosenMove)
+            print(movesList)
             if currentBoard.is_solved() == True:
+                print("finished")
+                print(currentBoard.get_board())
                 return movesList
 
         #pass
@@ -538,6 +549,6 @@ print(p.find_solution_a_star())
 
 print()
 b = [[1,2,3], [4,0,5], [6,7,8]]
-print(b)
+#print(b)
 p = TilePuzzle(b)
 print(p.find_solution_a_star())
