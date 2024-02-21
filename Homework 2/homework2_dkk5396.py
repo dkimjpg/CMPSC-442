@@ -442,36 +442,73 @@ def findPossibleMoves(point, scene):
     4 5 6
     1 2 3
     """
-    if pointRow - 1 < 0:                 #positions 7, 8, 9
-        if pointCol - 1 < 0:             #position 7
+    if pointRow - 1 < 0:                   #positions 7, 8, 9
+        if pointCol - 1 < 0:               #position 7
             movesList.remove("left")
             movesList.remove("downLeft")
-        if pointCol + 1 >= numCols:      #position 9
+            #check for True in down, downRight, and right
+            if scene[pointRow + 1][pointCol] == True:
+                movesList.remove("down")
+            if scene[pointRow][pointCol + 1] == True:
+                movesList.remove("right")
+            if scene[pointRow + 1][pointCol + 1] == True:
+                movesList.remove("downRight")
+
+        elif pointCol + 1 >= numCols:      #position 9
             movesList.remove("right")
-            movesList.remove("rightDown")
+            movesList.remove("downRight")
+            #check for True in down, downRight, and right
+            if scene[pointRow + 1][pointCol] == True:
+                movesList.remove("down")
+            if scene[pointRow][pointCol - 1] == True:
+                movesList.remove("left")
+            if scene[pointRow + 1][pointCol - 1] == True:
+                movesList.remove("downLeft")
+        else:                              #position 8
+            #check for True in down, downRight, right, downLeft, and left
+            if scene[pointRow + 1][pointCol] == True:
+                movesList.remove("down")
+            if scene[pointRow][pointCol + 1] == True:
+                movesList.remove("right")
+            if scene[pointRow + 1][pointCol + 1] == True:
+                movesList.remove("downRight")
+            if scene[pointRow][pointCol - 1] == True:
+                movesList.remove("left")
+            if scene[pointRow + 1][pointCol - 1] == True:
+                movesList.remove("downLeft")
         movesList.remove("up")
         movesList.remove("upLeft")
-        movesList.remove("upRight")
-    if pointRow + 1 >= numRows:          #positions 1, 2, 3
-        if pointCol - 1 < 0:             #position 1
+        movesList.remove("upRight")  
+
+    elif pointRow + 1 >= numRows:          #positions 1, 2, 3
+        if pointCol - 1 < 0:               #position 1
             movesList.remove("left")
             movesList.remove("upLeft")
-        if pointCol + 1 >= numCols:      #position 3
+        elif pointCol + 1 >= numCols:      #position 3
             movesList.remove("right")
-            movesList.remove("rightUp")
+            movesList.remove("upRight")
         movesList.remove("down")
         movesList.remove("downLeft")
         movesList.remove("downRight")
-    if pointCol - 1 < 0:                 #position 4
+    
+    elif pointCol - 1 < 0:                 #position 4
         movesList.remove("left")
         movesList.remove("upLeft")
         movesList.remove("downLeft")
-    if pointCol + 1 > numCols:           #position 6
+    
+    elif pointCol + 1 > numCols:           #position 6
         movesList.remove("right")
         movesList.remove("upRight")
         movesList.remove("downRight")
     
+    else:                                  #position 5
+        print() #get rid of this, this is just a placeholder
+    
     #STILL NEED TO CHECK FOR ANY SPACES THAT SAY TRUE, add this later when I have time, probably by using scene[x][y], whatever x and y are supposed to be
+    #Update: As of the time I'm writing this, it turns out the algorithm I wrote ALMOST works (when looking at the output, anyway). Turns out, not checking
+    #for the spaces that say True just makes it so the algorithm traverses through spaces that say True as well. Looks like it's time to fix this.
+    
+
 
     #print(scene)
     #print(movesList) Test to make sure this works
@@ -557,7 +594,8 @@ def find_path(start, goal, scene):
     
     obstructed = False
     currentPoint = start
-    while obstructed == False:        
+    #while obstructed == False:     
+    for test in range(0, 20):   
         depth = len(path)
         possibleMoves = findPossibleMoves(currentPoint, scene)
         for move in possibleMoves: #iterate through all the possible moves (which are just strings of directions right now) and prepare their tuples and put them in the priority queue
@@ -573,16 +611,22 @@ def find_path(start, goal, scene):
                 
                 #goal point was not found, continue with the search
                 distToEnd = calcEndDist(newPoint, goal)
-                sum = depth + distToEnd            
-                moveTuple = (sum, distToEnd, depth, newPoint, currentMovePath)
+                newDepth = depth + 1
+                sum = newDepth + distToEnd            
+                moveTuple = (sum, distToEnd, newDepth, newPoint, currentMovePath)
                 potentialQueue.put(moveTuple)
         if potentialQueue.empty() == True: #if all points that are accessible from start have been explored, there is nothing left to do but return None
             obstructed = True              #this probably doesn't really need to be done, but I'll set it just in case
             return None
         #now use .get() from the priority queue, it should use the sum as its main way to determine priority, then it should use distToEnd
         finishedList.append(currentPoint)   #append currentPoint to finishedList since we are done exploring currentPoint's options
-        currentPoint = potentialQueue.get() #if there's a problem here, that means the if statement that checks if potentialQueue is empty didn't work somehow, and I have no idea what to do about that
+        currentPointTuple = potentialQueue.get() #if there's a problem here, that means the if statement that checks if potentialQueue is empty didn't work somehow, and I have no idea what to do about that
+        currentPoint = currentPointTuple[3]
+        path.append(currentPoint) #by the way, currentPoint is supposed to be a tuple with just the row and col values, like this: (row, col)
+        #print("\n")
+        #print(currentPoint)
         #now that the new point has been chosen, it should go back to the beginning of the loop and start the process over, but I still feel like something's missing
+        #I figured out what was missing, I forgot to append currentPoint to path and also forgot to change the depth setting
 
     #pass
 
@@ -710,3 +754,7 @@ b = [[1,2,3], [4,0,5], [6,7,8]]
 #print(b)
 p = TilePuzzle(b)
 print(p.find_solution_a_star())
+
+print("\n Grid Navigation Tests")
+scene = [[False, False, False], [False, True , False], [False, False, False]]
+print(find_path((0, 0), (2, 1), scene))
