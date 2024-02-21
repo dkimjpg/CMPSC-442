@@ -477,19 +477,47 @@ def findPossibleMoves(point, scene):
     #print(movesList) Test to make sure this works
     return movesList
 
+def getMoveValue(move, point, scene): #assumes that only valid moves are being put into this
+    pointRow = point[0]
+    pointCol = point[1]
+    newPointRow = pointRow
+    newPointCol = pointCol
+    if move == "up":
+        newPointRow = pointRow - 1
+    if move == "upLeft":
+        newPointRow = pointRow - 1
+        newPointCol = pointCol - 1
+    if move == "upRight":
+        newPointRow = pointRow - 1
+        newPointCol = pointCol + 1
+    if move == "down":
+        newPointRow = pointRow + 1
+    if move == "downLeft":
+        newPointRow = pointRow + 1
+        newPointCol = pointCol - 1
+    if move == "downRight":
+        newPointRow = pointRow + 1
+        newPointCol = pointCol + 1
+    if move == "left":
+        newPointCol = pointCol - 1
+    if move == "right":
+        newPointCol = pointCol + 1
+    newPoint = (newPointRow, newPointCol)
+    #print newPoint
+    return newPoint
 
 def find_path(start, goal, scene):
-    startX = start[0]
-    startY = start[1]
-    goalX = goal[0]
-    goalY = goal[1]
+    startRow = start[0]
+    startCol = start[1]
+    goalRow = goal[0]
+    goalCol = goal[1]
 
     #checks if the start point or goal point lies on an obstacle (which means to check if the coordinates for either is True), return None if this is the case
-    if scene[startX][startY] == True:
+    if scene[startRow][startCol] == True:
         return None
-    if scene[goalX][goalY] == True:
+    if scene[goalRow][goalCol] == True:
         return None
-    if startX == goalX and startY == goalY: #if start and goal are the same, just return the goal tuple (or start tuple, they're both supposed to be the same anyway)
+    if startRow == goalRow and startCol == goalCol: #if start and goal are the same, just return the goal tuple (or start tuple, they're both supposed to be the same anyway)
         return goal
     
     """
@@ -521,19 +549,40 @@ def find_path(start, goal, scene):
     """
 
     potentialQueue = PriorityQueue()
-    startingDist = calcEndDist(start, goal)
-    startTuple = (startingDist, 0, start) #Tuple is made like this: (distance to end, distance of path, current point tuple)
-    potentialQueue.put()
-    finishedList = []
     path = [start]
+    startingDist = calcEndDist(start, goal)
+    startTuple = (startingDist + 0, startingDist, 0, start, path) #Tuple is made like this: (sum of distance to end and depth, distance to end, distance(depth) of path, current point tuple, path list)
+    potentialQueue.put(startTuple)
+    finishedList = [] #while running, check if a point that is found is already in this, if it is, skip over that point
+    
     obstructed = False
     currentPoint = start
-    while obstructed == False:
+    while obstructed == False:        
         depth = len(path)
-        possibleMoves = findPossibleMoves(currentPoint)
-        for moves in possibleMoves: #iterate through all the possible moves and do stuff
+        possibleMoves = findPossibleMoves(currentPoint, scene)
+        for move in possibleMoves: #iterate through all the possible moves (which are just strings of directions right now) and prepare their tuples and put them in the priority queue
             #probably should get the sum of the goalDistance and path distance for each move, then select the lowest one (that might require use of the priority queue)
-
+            newPoint = getMoveValue(move, currentPoint, scene) #sends the direction to move to the helper function to get the new point tuple:should be a tuple of the new point found after doing the move
+            if newPoint not in finishedList: #checks if the newPoint has already been explored, if it is not, continue with the following code
+                moveRow = newPoint[0]
+                moveCol = newPoint[1]
+                currentMovePath = path.copy()
+                currentMovePath.append(newPoint)
+                if moveRow == goalRow and moveCol == goalCol: #if goal point is found (by comparing the current point coords to the goal point coords), return the path list
+                    return currentMovePath
+                
+                #goal point was not found, continue with the search
+                distToEnd = calcEndDist(newPoint, goal)
+                sum = depth + distToEnd            
+                moveTuple = (sum, distToEnd, depth, newPoint, currentMovePath)
+                potentialQueue.put(moveTuple)
+        if potentialQueue.empty() == True: #if all points that are accessible from start have been explored, there is nothing left to do but return None
+            obstructed = True              #this probably doesn't really need to be done, but I'll set it just in case
+            return None
+        #now use .get() from the priority queue, it should use the sum as its main way to determine priority, then it should use distToEnd
+        finishedList.append(currentPoint)   #append currentPoint to finishedList since we are done exploring currentPoint's options
+        currentPoint = potentialQueue.get() #if there's a problem here, that means the if statement that checks if potentialQueue is empty didn't work somehow, and I have no idea what to do about that
+        #now that the new point has been chosen, it should go back to the beginning of the loop and start the process over, but I still feel like something's missing
 
     #pass
 
