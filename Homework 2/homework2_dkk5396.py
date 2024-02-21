@@ -360,7 +360,6 @@ class TilePuzzle(object):
         while(True):
         #for test in range(0, 20):
             #moveQueue = PriorityQueue()
-            #moveList = []
             depth = len(movesList)
             currentBoard = TilePuzzle(chosenMoveTuple[1][5]).copy()
             if currentBoard.testIfPossible("up") == True and reverseMove != "up":
@@ -371,7 +370,6 @@ class TilePuzzle(object):
                 #print("up")
                 moveTuple = (sum, 1 ,movesList, "up", depth, copyBoard.get_board()) #IMPORTANT note: the 1 shown in the tuple is necessary for the priority queue to work, without it, it will prioritize alphabetical order first, making it prioritize "down" as its movement of choice if there are any ties. This is contrary to what the instruction examples show.
                 moveQueue.put((sum, moveTuple)) #did (sum, moveTuple) in case PriorityQueue only worked with tuples with only two elements
-                #moveList.append((sum, moveTuple))
             if currentBoard.testIfPossible("down") == True and reverseMove != "down":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("down")
@@ -380,7 +378,6 @@ class TilePuzzle(object):
                 #print("down")
                 moveTuple = (sum, 2 ,movesList, "down", depth, copyBoard.get_board())
                 moveQueue.put((sum, moveTuple))
-                #moveList.append((sum, moveTuple))
             if currentBoard.testIfPossible("left") == True and reverseMove != "left":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("left")
@@ -389,7 +386,6 @@ class TilePuzzle(object):
                 #print("left")
                 moveTuple = (sum, 3 ,movesList, "left", depth, copyBoard.get_board())
                 moveQueue.put((sum, moveTuple))
-                #moveList.append((sum, moveTuple))
             if currentBoard.testIfPossible("right") == True and reverseMove != "right":
                 copyBoard = TilePuzzle(currentBoard.get_board()).copy()
                 copyBoard.perform_move("right")
@@ -398,7 +394,6 @@ class TilePuzzle(object):
                 #print("right")
                 moveTuple = (sum, 4 ,movesList, "right", depth, copyBoard.get_board())
                 moveQueue.put((sum, moveTuple))
-                #moveList.append((sum, moveTuple))
             #print(moveQueue.queue[0])
             #print(moveQueue.queue[1])
             #print(moveQueue.queue[2])
@@ -425,6 +420,63 @@ class TilePuzzle(object):
 ############################################################
 # Section 2: Grid Navigation
 ############################################################
+def calcEndDist(point, end): #calculates the distance from a point to the end point
+    pointX = point[0]
+    pointY = point[1]
+    endX = end[0]
+    endY = end[1]
+    xDist = abs(endX - pointX)
+    yDist = abs(endY - pointY)
+    dist = math.floor(math.hypot(xDist, yDist) * 10) #multiply by 10 and then use floor division to truncate the rest of the decimal off
+    return dist
+
+def findPossibleMoves(point, scene):
+    numRows = len(scene)
+    numCols = len(scene[0])
+    movesList = ["up", "upLeft", "upRight", "left", "right", "down", "downLeft", "downRight"]
+    pointRow = point[0]
+    pointCol = point[1]
+    """
+    Removing based on the following positions:
+    7 8 9
+    4 5 6
+    1 2 3
+    """
+    if pointRow - 1 < 0:                 #positions 7, 8, 9
+        if pointCol - 1 < 0:             #position 7
+            movesList.remove("left")
+            movesList.remove("downLeft")
+        if pointCol + 1 >= numCols:      #position 9
+            movesList.remove("right")
+            movesList.remove("rightDown")
+        movesList.remove("up")
+        movesList.remove("upLeft")
+        movesList.remove("upRight")
+    if pointRow + 1 >= numRows:          #positions 1, 2, 3
+        if pointCol - 1 < 0:             #position 1
+            movesList.remove("left")
+            movesList.remove("upLeft")
+        if pointCol + 1 >= numCols:      #position 3
+            movesList.remove("right")
+            movesList.remove("rightUp")
+        movesList.remove("down")
+        movesList.remove("downLeft")
+        movesList.remove("downRight")
+    if pointCol - 1 < 0:                 #position 4
+        movesList.remove("left")
+        movesList.remove("upLeft")
+        movesList.remove("downLeft")
+    if pointCol + 1 > numCols:           #position 6
+        movesList.remove("right")
+        movesList.remove("upRight")
+        movesList.remove("downRight")
+    
+    #STILL NEED TO CHECK FOR ANY SPACES THAT SAY TRUE, add this later when I have time, probably by using scene[x][y], whatever x and y are supposed to be
+
+    #print(scene)
+    #print(movesList) Test to make sure this works
+    return movesList
+
 
 def find_path(start, goal, scene):
     startX = start[0]
@@ -443,12 +495,46 @@ def find_path(start, goal, scene):
     """
     For the terminating case, since I'll probably use a priority queue because I'm using A star search, if the priority queue is empty,
     that means that all possible areas have been traversed and it is impossible to reach the goal. This might need to be changes, but
-    for now, it seems to be the best terminating case.
-    BUT NOW THAT I THINK OF IT: I don't thing the priority queue will ever be empty since I'm always adding to it, even if a place has 
-    already been visited.
+    for now, it seems to be the best terminating case. 
+    Something important to note: after finishing looking at all of a node's options, the node should not be considered again. It's probably
+    best to move it to a list of nodes to not consider, so if that particular node shows up, I can check if the node is on the list to not
+    consider so it won't be considered in calculations. Eventually, all nodes that are reachable from the starting node should be put onto
+    that list if the end node cannot be reached.
     """
     #Also, make something that checks if it is possible to even move from the start position. Check every possible move, and if all of them fail, return None.
     
+    """
+    To start, make a while loop that terminates if every possible point from the start point has been explored. The best way to do this is to probably
+    use a priority queue that is filled with potential points that have been found but have not finished considering all of its options, and when that
+    queue is empty (use .empty() on a priority queue, and if True is returned, that's when the while loop can terminate), set something so it can terminate.
+    To run the actual algorithm, I'll want to follow some of the steps from the a star algorithm in question 1.
+    Another thing I'll want to do is make a helper function that calculates the distance from the current point to the end point.
+        Not to mention a helper function that tests if a specific direction is even possible, or better yet, a function that returns a list of directions
+        that are actually possible.
+    But in the while loop, I should try every possible direction. After that, I'll choose the most optimal direction based on the sum of the distance to the
+    end point and the distance of the amount currently traveled (or the length of path list). Other than that, everything else should be similar to question 1's
+    work, really.
+
+    One more thing, since Euclidian distance is supposed to be used, make vertical and horizontal equal to 10, but diagonals should be 14, since normally it would
+    be about 1.4 due to using the Pythagorean theorem to get the hypotenuse, so multiply all number by 10 so cardinal direction is 10, and diagonal is 14. This just
+    keeps things simpler with just integers.
+    """
+
+    potentialQueue = PriorityQueue()
+    startingDist = calcEndDist(start, goal)
+    startTuple = (startingDist, 0, start) #Tuple is made like this: (distance to end, distance of path, current point tuple)
+    potentialQueue.put()
+    finishedList = []
+    path = [start]
+    obstructed = False
+    currentPoint = start
+    while obstructed == False:
+        depth = len(path)
+        possibleMoves = findPossibleMoves(currentPoint)
+        for moves in possibleMoves: #iterate through all the possible moves and do stuff
+            #probably should get the sum of the goalDistance and path distance for each move, then select the lowest one (that might require use of the priority queue)
+
+
     #pass
 
 ############################################################
