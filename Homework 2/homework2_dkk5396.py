@@ -670,10 +670,10 @@ def find_path(start, goal, scene):
     
     obstructed = False
     currentPoint = start
-    #while obstructed == False:     
-    for test in range(0, 20):   
+    while obstructed == False:     
+    #for test in range(0, 20):   
         #depth = len(path)
-        newDepth = 0
+        #newDepth = 0
         #print()
         possibleMoves = findPossibleMoves(currentPoint, scene)
         #print("possible moves:")
