@@ -11,7 +11,8 @@ student_name = "David Kim"
 # Include your imports here, if any are used.
 import math
 import random
-from itertools import permutations
+import copy
+#from itertools import permutations
 from queue import PriorityQueue
 
 
@@ -738,9 +739,82 @@ def find_path(start, goal, scene):
 ############################################################
 # Section 3: Linear Disk Movement, Revisited
 ############################################################
+def makeRow(length, num):
+    diskRow = list(range(0, num)) + ([-1] * (length - num)) #want to make a grid by concatenating a list of numbers (using range) and a list of -1's.
+    return diskRow
+
+def performMove(diskRow, index, moves): #diskRow is the list for the disk row
+    moveDiskRow = diskRow.copy()
+    if index + moves <= len(diskRow):
+        moveDiskRow[index + moves] = moveDiskRow[index]
+        moveDiskRow[index] = -1
+        return moveDiskRow
+    else:
+        print("can't move index {} by {} spaces for some reason".format(index, moves))
+        #maybe return something here
+
+def isSolved(diskRow, num):
+    for i in range(0, len(diskRow) - num):
+        if diskRow[i] != -1:
+            return False
+    for i in range(len(diskRow) - num, len(diskRow)):
+        if diskRow[i] != len(diskRow) - 1 - i:
+            return False
+    return True
+
+def heuristic(diskRow):
+    x = 0
+    for i in range(0, len(diskRow)):
+        if diskRow[i] != -1:
+            x = x + abs(len(diskRow) - 1 - diskRow[i] - i)
+    return x
+
+def successors(diskRow):
+    length = len(diskRow)
+    possibleSuccessors = []
+    for i in range(0, length):
+        if diskRow[i] != -1 and i + 1 < length and diskRow[i + 1] == -1: #checking if disk at diskRow[i] can move one space
+            copyRow = diskRow.copy()
+            moveRow = performMove(copyRow, i, 1)
+            performTuple = ((i, i + 1), moveRow) #creates a tuple with a tuple of the current index and the next, and the diskRow after the performed move
+            possibleSuccessors.append(performTuple)
+        if diskRow[i] != -1 and i + 2 < length and diskRow[i + 1] != -1 and diskRow[i + 2] == -1: #checking if disk at diskRow[i] can move two spaces (by hopping over another disk)
+            copyRow = diskRow.copy()
+            moveRow = performMove(copyRow, i, 2)
+            performTuple = ((i, i + 2), moveRow)
+            possibleSuccessors.append(performTuple)
+    return possibleSuccessors
 
 def solve_distinct_disks(length, n):
-    pass
+    diskRow = makeRow(length, n)
+    startingRowTuple = (diskRow, heuristic(diskRow), 0, []) #create a tuple that has the following (heuristic of the current diskRow, depth of algorithm, path taken)
+    finishedList = []
+    potentialQueue = PriorityQueue()
+    potentialQueue.put(startingRowTuple)
+    while(True):
+        if potentialQueue.empty() == True: #if no solution can be found, return empty
+            return None
+        newDiskRowTuple = potentialQueue.get()
+        newDiskRow = newDiskRowTuple[0].copy()
+        newHeuristic = newDiskRowTuple[1]
+        newDepth = newDiskRowTuple[2]
+        #print(newDiskRowTuple[3])
+        #pathTaken = copy.deepcopy(newDiskRowTuple[3])
+        if newDiskRow not in finishedList:
+            finishedList.append(newDiskRow) #maybe encapsulate this in a tuple?
+        if isSolved(newDiskRow, n) == True: #if solved, return the path taken.
+            return newDiskRowTuple[3]
+        
+        #not solved yet, generate successors and put them into the queue
+        successorsList = successors(newDiskRow)
+        for succMove in successorsList:
+            succMovement = succMove[0]
+            succDiskRow = succMove[1]
+            queueTuple = (succDiskRow, newDepth + 1 + heuristic(succDiskRow), newDepth + 1, newDiskRowTuple[3] + [succMovement])#pathTaken.append(succMovement)) #create new tuple to put into the queue
+            if succDiskRow not in finishedList:
+                potentialQueue.put(queueTuple)
+
+    #pass
 
 ############################################################
 # Section 4: Dominoes Game
@@ -860,7 +934,7 @@ b = [[1,2,3], [4,0,5], [6,7,8]]
 p = TilePuzzle(b)
 print(p.find_solution_a_star())
 
-print("\n Grid Navigation Tests")
+print("\nGrid Navigation Tests")
 scene = [[False, False, False], [False, True , False], [False, False, False]]
 print(find_path((0, 0), (2, 1), scene))
 print()
@@ -873,3 +947,12 @@ scene = [[False, False, False, False], [True, True, False, True], [False, False,
 print("----------------------")
 print(find_path((3, 0), (3, 3), scene))
 print()
+
+print("\nLinear Disk Movement Tests")
+print(solve_distinct_disks(4, 2))
+print()
+print(solve_distinct_disks(5, 2))
+print()
+print(solve_distinct_disks(4, 3))
+print()
+print(solve_distinct_disks(5, 3))
