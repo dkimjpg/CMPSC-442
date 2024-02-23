@@ -745,12 +745,29 @@ def makeRow(length, num):
 
 def performMove(diskRow, index, moves): #diskRow is the list for the disk row
     moveDiskRow = diskRow.copy()
+    #if not (index + moves >= len(diskRow) or index + moves < 0):
+        #moveDiskRow[index + moves] = moveDiskRow[index]
+        #moveDiskRow[index] = -1
+        #return moveDiskRow
+    """
     if index + moves <= len(diskRow):
         moveDiskRow[index + moves] = moveDiskRow[index]
         moveDiskRow[index] = -1
         return moveDiskRow
+    elif index + moves >= 0:
+        moveDiskRow[index + moves] = moveDiskRow[index]
+        moveDiskRow[index] = -1
+        return moveDiskRow
+    """
+    if index + moves >= len(diskRow) or index + moves < 0:
+        #print("fail")
+        return moveDiskRow
     else:
-        print("can't move index {} by {} spaces for some reason".format(index, moves))
+        #print("works")
+        moveDiskRow[index + moves] = moveDiskRow[index]
+        moveDiskRow[index] = -1
+        return moveDiskRow
+        #print("can't move index {} by {} spaces for some reason".format(index, moves))
         #maybe return something here
 
 def isSolved(diskRow, num):
@@ -783,11 +800,22 @@ def successors(diskRow):
             moveRow = performMove(copyRow, i, 2)
             performTuple = ((i, i + 2), moveRow)
             possibleSuccessors.append(performTuple)
+        if diskRow[i] != -1 and i - 1 >= 0 and diskRow[i - 1] == -1: #checking if disk at diskRow[i] can move back one space
+            copyRow = diskRow.copy()
+            moveRow = performMove(copyRow, i, 1)
+            performTuple = ((i, i + 1), moveRow) #creates a tuple with a tuple of the current index and the next, and the diskRow after the performed move
+            possibleSuccessors.append(performTuple)
+        if diskRow[i] != -1 and i - 2 >= 0 and diskRow[i - 1] != -1 and diskRow[i - 2] == -1: #checking if disk at diskRow[i] can move back two spaces (by hopping over another disk)
+            copyRow = diskRow.copy()
+            moveRow = performMove(copyRow, i, 2)
+            performTuple = ((i, i + 2), moveRow)
+            possibleSuccessors.append(performTuple)
     return possibleSuccessors
 
 def solve_distinct_disks(length, n):
+    print("-----------")
     diskRow = makeRow(length, n)
-    startingRowTuple = (diskRow, heuristic(diskRow), 0, []) #create a tuple that has the following (heuristic of the current diskRow, depth of algorithm, path taken)
+    startingRowTuple = (heuristic(diskRow), 0, diskRow, []) #create a tuple that has the following (heuristic of the current diskRow, depth of algorithm, path taken)
     finishedList = []
     potentialQueue = PriorityQueue()
     potentialQueue.put(startingRowTuple)
@@ -795,9 +823,11 @@ def solve_distinct_disks(length, n):
         if potentialQueue.empty() == True: #if no solution can be found, return empty
             return None
         newDiskRowTuple = potentialQueue.get()
-        newDiskRow = newDiskRowTuple[0].copy()
-        newHeuristic = newDiskRowTuple[1]
-        newDepth = newDiskRowTuple[2]
+        #print("aaa")
+        #print(newDiskRowTuple)
+        newDiskRow = newDiskRowTuple[2].copy()
+        newHeuristic = newDiskRowTuple[0]
+        newDepth = newDiskRowTuple[1]
         #print(newDiskRowTuple[3])
         #pathTaken = copy.deepcopy(newDiskRowTuple[3])
         if newDiskRow not in finishedList:
@@ -810,8 +840,9 @@ def solve_distinct_disks(length, n):
         for succMove in successorsList:
             succMovement = succMove[0]
             succDiskRow = succMove[1]
-            queueTuple = (succDiskRow, newDepth + 1 + heuristic(succDiskRow), newDepth + 1, newDiskRowTuple[3] + [succMovement])#pathTaken.append(succMovement)) #create new tuple to put into the queue
+            queueTuple = (newDepth + 1 + heuristic(succDiskRow), newDepth + 1, succDiskRow, newDiskRowTuple[3] + [succMovement])#pathTaken.append(succMovement)) #create new tuple to put into the queue
             if succDiskRow not in finishedList:
+                #print(queueTuple)
                 potentialQueue.put(queueTuple)
 
     #pass
@@ -821,44 +852,56 @@ def solve_distinct_disks(length, n):
 ############################################################
 
 def create_dominoes_game(rows, cols):
-    pass
+    print()
+    #pass
 
 class DominoesGame(object):
 
     # Required
     def __init__(self, board):
-        pass
+        print()
+        #pass
 
     def get_board(self):
-        pass
+        print()
+        #pass
 
     def reset(self):
-        pass
+        print()
+        #pass
 
     def is_legal_move(self, row, col, vertical):
-        pass
+        print()
+        #pass
 
     def legal_moves(self, vertical):
-        pass
+        print()
+        #pass
 
     def perform_move(self, row, col, vertical):
-        pass
+        print()
+        #pass
 
     def game_over(self, vertical):
-        pass
+        print()
+        #pass
 
     def copy(self):
-        pass
+        print()
+        #pass
 
     def successors(self, vertical):
-        pass
+        print()
+        #pass
 
     def get_random_move(self, vertical):
-        pass
+        print()
+        #pass
 
     # Required
     def get_best_move(self, vertical, limit):
-        pass
+        print()
+        #pass
 
 ############################################################
 # Tests
