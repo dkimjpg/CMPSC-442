@@ -16,7 +16,7 @@ I'll probably update this as I get further in the class, but that's only if I re
 - [x] Intelligent Agents
 - [x] Search
 - [x] Uninformed Search \(_Homework 1_\)
-- [ ] Informed Search \(_Homework 2_\)
+- [x] Informed Search \(_Homework 2_\)
 - [ ] Games and Adversarial Search
 - [ ] Non-classical Search
 - [ ] Constraint Satisfaction Problem
