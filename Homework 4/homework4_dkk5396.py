@@ -25,13 +25,22 @@ class Atom(Expr):
         self.name = name
         self.hashable = name
     def __hash__(self):
-        pass
+        return hash((type(self).__name__, self.hashable))
+        #pass
     def __eq__(self, other):
-        pass
+        #these print statements are to check if other is like self.name or if other is like self, need to know the difference
+        print(self.name)
+        print(other)
+        if self.name == other: #might have to do other.name if this doesn't work
+            return True
+        else:
+            return False
+        #pass
     def __repr__(self):
         pass
     def atom_names(self):
-        pass
+        return set(self.name) #check if this works properly
+        #pass
     def evaluate(self, assignment):
         pass
     def to_cnf(self):
