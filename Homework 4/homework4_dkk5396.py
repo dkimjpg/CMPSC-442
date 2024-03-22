@@ -2,7 +2,7 @@
 # CMPSC 442: Logic
 ############################################################
 
-student_name = "Type your full name here."
+student_name = "David Kim"
 
 ############################################################
 # Imports
