@@ -29,17 +29,18 @@ class Atom(Expr):
         #pass
     def __eq__(self, other):
         #these print statements are to check if other is like self.name or if other is like self, need to know the difference
-        print(self.name)
-        print(other)
-        if self.name == other: #might have to do other.name if this doesn't work
+        #print(self.name)
+        #print(other.name)
+        if self.name == other: 
             return True
         else:
             return False
         #pass
-    def __repr__(self):
-        pass
+    def __repr__(self): #do this later
+        return f'Atom({self.name})'
+        #pass
     def atom_names(self):
-        return set(self.name) #check if this works properly
+        return f'set([{repr(self.name)}])' #check if this works properly
         #pass
     def evaluate(self, assignment):
         pass
@@ -51,13 +52,19 @@ class Not(Expr):
         self.arg = arg
         self.hashable = arg
     def __hash__(self):
-        pass
+        return hash((type(self).__name__, self.hashable))
+        #pass
     def __eq__(self, other):
-        pass
+        if self.arg == other: 
+            return True
+        else:
+            return False
+        #pass
     def __repr__(self):
         pass
     def atom_names(self):
-        pass
+        return f'set([{repr(self.arg.name)}])'
+        #pass
     def evaluate(self, assignment):
         pass
     def to_cnf(self):
@@ -68,13 +75,22 @@ class And(Expr):
         self.conjuncts = frozenset(conjuncts)
         self.hashable = self.conjuncts
     def __hash__(self):
-        pass
+        return hash((type(self).__name__, self.hashable))
+        #pass
     def __eq__(self, other):
-        pass
+        if self.conjuncts == other.conjuncts: 
+            return True
+        else:
+            return False
+        #pass
     def __repr__(self):
         pass
     def atom_names(self):
-        pass
+        conjunctList = list(self.conjuncts)
+        print(conjunctList[0].name)
+        #print(len(self.conjuncts))
+        #return f'set([{self.conjuncts}])'
+        #pass
     def evaluate(self, assignment):
         pass
     def to_cnf(self):
@@ -85,13 +101,19 @@ class Or(Expr):
         self.disjuncts = frozenset(disjuncts)
         self.hashable = self.disjuncts
     def __hash__(self):
-        pass
+        return hash((type(self).__name__, self.hashable))
+        #pass
     def __eq__(self, other):
-        pass
+        if self.name == other: 
+            return True
+        else:
+            return False
+        #pass
     def __repr__(self):
         pass
     def atom_names(self):
-        pass
+        return f'set([{repr(self.arg.name)}])'
+        #pass
     def evaluate(self, assignment):
         pass
     def to_cnf(self):
@@ -103,13 +125,21 @@ class Implies(Expr):
         self.right = right
         self.hashable = (left, right)
     def __hash__(self):
-        pass
+        return hash((type(self).__name__, self.hashable))
+        #pass
     def __eq__(self, other):
-        pass
+        if self.name == other: 
+            return True
+        else:
+            return False
+        #pass
     def __repr__(self):
-        pass
+        impList = [self.left, self.right]
+        #pass
     def atom_names(self):
-        pass
+        
+        return f'set([{repr(self.arg.name)}])'
+        #pass
     def evaluate(self, assignment):
         pass
     def to_cnf(self):
@@ -121,9 +151,14 @@ class Iff(Expr):
         self.right = right
         self.hashable = (left, right)
     def __hash__(self):
-        pass
+        return hash((type(self).__name__, self.hashable))
+        #pass
     def __eq__(self, other):
-        pass
+        if self.name == other: 
+            return True
+        else:
+            return False
+        #pass
     def __repr__(self):
         pass
     def atom_names(self):
@@ -212,3 +247,31 @@ Your response may span multiple lines.
 Do not include these instructions in your response.
 """
 
+
+#####################################################
+# Test Cases
+#####################################################
+
+print("Section 1: Propositional Logic")
+
+print("\n1.1")
+print(Atom("a") == Atom("a")) #should return True
+print(Atom("a") == Atom("b")) #should return False
+print(And(Atom("a"), Not(Atom("b"))) == And(Not(Atom("b")), Atom("a"))) #should return True
+
+
+print("\n1.2")
+a, b, c = map(Atom, "abc")
+print(Implies(a, Iff(b, c))) #should return: Implies(Atom(a), Iff(Atom(b), Atom(c)))
+a, b, c = map(Atom, "abc")
+print(And(a, Or(Not(b), c))) #should return: And(Atom(a), Or(Not(Atom(b)), Atom(c)))
+
+
+"""
+print("1.3")
+print(Atom("a").atom_names())
+print(Not(Atom("a")).atom_names())
+a, b, c = map(Atom, "abc")
+expr = And(a, Implies(b, Iff(a, c)))
+print(expr.atom_names())
+"""
