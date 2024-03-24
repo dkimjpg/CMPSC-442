@@ -63,7 +63,7 @@ class Not(Expr):
     def __repr__(self):
         pass
     def atom_names(self):
-        return f'set([{repr(self.arg.name)}])'
+        return f'Not({repr(self.arg.name)})'
         #pass
     def evaluate(self, assignment):
         pass
@@ -84,7 +84,8 @@ class And(Expr):
             return False
         #pass
     def __repr__(self):
-        pass
+        #return f'And({repr(self.conjuncts.name)})'
+        #pass
     def atom_names(self):
         conjunctList = list(self.conjuncts)
         print(conjunctList[0].name)
@@ -135,6 +136,7 @@ class Implies(Expr):
         #pass
     def __repr__(self):
         impList = [self.left, self.right]
+        return f'Implies({repr(impList)})'
         #pass
     def atom_names(self):
         
