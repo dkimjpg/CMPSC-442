@@ -61,10 +61,11 @@ class Not(Expr):
             return False
         #pass
     def __repr__(self):
-        pass
-    def atom_names(self):
-        return f'Not({repr(self.arg.name)})'
+        return f'Not({self.arg})' #maybe use repr(self.arg.name) if it doesn't work
         #pass
+    def atom_names(self):
+        #return f'Not({self.arg})' #maybe use repr(self.arg.name) if it doesn't work
+        pass
     def evaluate(self, assignment):
         pass
     def to_cnf(self):
@@ -84,7 +85,22 @@ class And(Expr):
             return False
         #pass
     def __repr__(self):
-        #return f'And({repr(self.conjuncts.name)})'
+        #copyAndSet = self.conjuncts.copy()
+        #copyAndList = []
+        #print(len(copyAndSet))
+        #print(copyAndSet)
+        #print(self.conjuncts)
+        #for x in copyAndSet:
+            #nextElement = next(iter(copyAndSet))
+            #print(nextElement)
+            #copyAndList.append(nextElement)
+        #print("and___")
+        #print(copyAndList)
+        #copyAndList = [next(iter(self.conjuncts)) for _ in self.conjuncts]
+        copyAndList = list(self.conjuncts)
+        #print(copyAndList)
+        return f'And({copyAndList})'
+        #return f'And({self.conjuncts})'
         #pass
     def atom_names(self):
         conjunctList = list(self.conjuncts)
@@ -111,7 +127,19 @@ class Or(Expr):
             return False
         #pass
     def __repr__(self):
-        pass
+        """
+        copyOrSet = self.disjuncts.copy()
+        copyOrList = []
+        for x in copyOrSet:
+            copyOrList.append(next(iter(copyOrSet)))
+            #copyAndList.append(copyAndSet.pop())        
+        """
+        #print("or ____")
+        #print(copyOrList)
+        #copyOrList = [next(iter(self.disjuncts)) for _ in self.disjuncts]
+        copyOrList = list(self.disjuncts)
+        return f'Or({copyOrList})'
+        #pass
     def atom_names(self):
         return f'set([{repr(self.arg.name)}])'
         #pass
@@ -135,8 +163,10 @@ class Implies(Expr):
             return False
         #pass
     def __repr__(self):
-        impList = [self.left, self.right]
-        return f'Implies({repr(impList)})'
+        #impList = [self.left, self.right]
+        #print(impList[0])
+        #print(impList[1])
+        return f'Implies({self.left}, {self.right})'
         #pass
     def atom_names(self):
         
@@ -162,7 +192,8 @@ class Iff(Expr):
             return False
         #pass
     def __repr__(self):
-        pass
+        return f'Iff({self.left}, {self.right})'
+        #pass
     def atom_names(self):
         pass
     def evaluate(self, assignment):
