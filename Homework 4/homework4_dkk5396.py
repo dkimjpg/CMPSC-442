@@ -96,22 +96,24 @@ class Not(Expr):
         #print(self.arg)
         if isinstance(self.arg, Atom) == False:
             exprFlag = True
+        """
         if isinstance(self.arg, Atom) == True:
-            boolExtract = self.arg.evaluate(self.arg)
+            boolExtract = self.arg.evaluate(assignment)
             #print("boolExtract")
             #print(boolExtract)
             return boolExtract
+        """
 
         if exprFlag == True:
-            newBool = self.arg.evaluate(self.arg)
-            if assignment.get(newBool) == True:
-                return False
-            if assignment.get(newBool) == False:
-                return True
-            #if newBool == True:
-                    #return False
-            #if newBool == False:
-                    #return True
+            newBool = self.arg.evaluate(assignment)
+            #if assignment.get(newBool) == True:
+                #return False
+            #if assignment.get(newBool) == False:
+                #return True
+            if newBool == True:
+                    return False
+            if newBool == False:
+                    return True
 
         """
         valAssignment = assignment
@@ -178,12 +180,12 @@ class And(Expr):
                 exprFlag = True
 
         if exprFlag == True: #need to extract boolean values            
-            listAssignment = []
+            #listAssignment = []
             for literal in self.conjuncts:
-                newBool = literal.evaluate(literal) #evaluating literal should yield a list
-                listAssignment.extend(newBool)
-                #if newBool == False: #a literal with a value of False was found, return False
-                    #return False
+                newBool = literal.evaluate(assignment) #evaluating literal should yield a list
+                #listAssignment.extend(newBool)
+                if newBool == False: #a literal with a value of False was found, return False
+                    return False
 
                 """
                 if isinstance(literal, Atom) == False:
@@ -194,19 +196,21 @@ class And(Expr):
                     if assignment.get(literal) == False: #a literal with a value of False was found, return False
                         return False
                 """
-            for literal in listAssignment:
-                if assignment.get(literal) == False: #a literal with a value of True was found, return True
-                    return False
+            #for literal in listAssignment:
+                #if assignment.get(literal) == False: #a literal with a value of True was found, return True
+                    #return False
             return True #assuming that not a single False was found in the literals
 
+        """
         for literal in self.disjuncts:
             boolList = []
             if isinstance(literal, Atom) == True:
-                boolExtract = literal.evaluate(literal)
+                boolExtract = literal.evaluate(assignment)
                 #print("boolExtract")
                 #print(boolExtract)
                 boolList.extend(boolExtract)
             return boolList
+        """
         
         if exprFlag == False: #all entries are just dictionaries (which makes things easier)
             #andKeys = assignment.keys()
@@ -264,12 +268,12 @@ class Or(Expr):
                 exprFlag = True
         
         if exprFlag == True: #need to extract boolean values
-            listAssignment = []
+            #listAssignment = []
             for literal in self.disjuncts:
-                newBool = literal.evaluate(literal) #evaluating literal should yield a list of some sort
-                listAssignment.extend(newBool)
-                #if newBool == True: #a literal with a value of True was found, return True
-                    #return True
+                newBool = literal.evaluate(assignment) #evaluating literal should yield a list of some sort
+                #listAssignment.extend(newBool)
+                if newBool == True: #a literal with a value of True was found, return True
+                    return True
                 
                 """
                 if isinstance(literal, dict) == False: #literal is not a dictionary
@@ -280,19 +284,21 @@ class Or(Expr):
                     if assignment.get(literal) == True: #a literal with a value of True was found, return True
                         return True
                 """
-            for literal in listAssignment:
-                if assignment.get(literal) == True: #a literal with a value of True was found, return True
-                    return True
+            #for literal in listAssignment:
+                #if assignment.get(literal) == True: #a literal with a value of True was found, return True
+                    #return True
             return False #assuming that not a single True was found in the literals
         
+        """
         for literal in self.disjuncts:
             boolList = []
             if isinstance(literal, Atom) == True:
-                boolExtract = literal.evaluate(literal)
+                boolExtract = literal.evaluate(assignment)
                 #print("boolExtract")
                 #print(boolExtract)
                 boolList.extend(boolExtract)
             return boolList
+        """
 
         if exprFlag == False: #all entries are just dictionaries (which makes things easier)
             #andKeys = assignment.keys()
@@ -344,9 +350,11 @@ class Implies(Expr):
             exprFlag = True
         
         if exprFlag == True:
-            leftBool = self.left.evaluate(self.left)
-            rightBool = self.right.evaluate(self.right)
-            if assignment.get(leftBool) == True and assignment.get(rightBool) == False:
+            leftBool = self.left.evaluate(assignment)
+            rightBool = self.right.evaluate(assignment)
+            #if assignment.get(leftBool) == True and assignment.get(rightBool) == False:
+                #return False
+            if leftBool == True and rightBool == False:
                 return False
 
         """
@@ -355,10 +363,12 @@ class Implies(Expr):
                 exprFlag == True
         """
 
+        """
         if isinstance(self.left, Atom) == True or isinstance(self.right, Atom) == True:
             boolLeft = self.left.evaluate(assignment)
             boolRight = self.right.evaluate(assignment)
             return [boolLeft, boolRight]
+        """
 
         
         if exprFlag == False:
@@ -438,17 +448,24 @@ class Iff(Expr):
             exprFlag = True
         
         if exprFlag == True:
-            leftBool = self.left.evaluate(self.left)
-            rightBool = self.right.evaluate(self.right)
-            if assignment.get(leftBool) == True and assignment.get(rightBool) == True:
+            leftBool = self.left.evaluate(assignment)
+            rightBool = self.right.evaluate(assignment)
+            #if assignment.get(leftBool) == True and assignment.get(rightBool) == True:
+                #return True
+            #if assignment.get(leftBool) == False and assignment.get(rightBool) == False:
+                #return True
+            if leftBool == True and rightBool == True:
                 return True
-            if assignment.get(leftBool) == False and assignment.get(rightBool) == False:
+            if leftBool == False and rightBool == False:
                 return True
+            return False
 
+        """
         if isinstance(self.left, Atom) == True or isinstance(self.right, Atom) == True:
-            boolLeft = self.left.evaluate(self.left)
-            boolRight = self.right.evaluate(self.right)
+            boolLeft = self.left.evaluate(assignment)
+            boolRight = self.right.evaluate(assignment)
             return [boolLeft, boolRight]
+        """
         
         if exprFlag == False:
             iffKeys = assignment.keys()
