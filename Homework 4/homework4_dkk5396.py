@@ -10,7 +10,7 @@ student_name = "David Kim"
 
 # Include your imports here, if any are used.
 
-
+import itertools
 
 ############################################################
 # Section 1: Propositional Logic
@@ -480,7 +480,23 @@ class Iff(Expr):
         pass
 
 def satisfying_assignments(expr):
-    pass
+    extractLen = 4 #after extracting the literals, get the length of the list here
+    boolCombo = list(itertools.product([True,False], repeat = extractLen)) #gives a 2d list of all the possible combinations
+    #from here, just iterate through boolCombo and the list of literals I extracted (whenever I get to that) and make dictionaries
+    
+    #I'm thinking of a for loop that has a length that's the same as boolCombo, and then another for loop inside that has
+    # a length of 3 (0, 1, 2). I might need another for loop inside that so I can select the correct letter while making the
+    #dictionaries
+
+    """
+    extractLen = 4
+    bools = [True, False]
+    for x in range(extractLen + 1):
+        for subset in itertools.combinations(bools, x):
+            print(subset)
+    """
+
+    #pass
 
 class KnowledgeBase(object):
     def __init__(self):
