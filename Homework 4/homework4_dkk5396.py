@@ -36,11 +36,12 @@ class Atom(Expr):
         else:
             return False
         #pass
-    def __repr__(self): #do this later
+    def __repr__(self):
         return f'Atom({self.name})'
         #pass
     def atom_names(self):
-        return f'set([{repr(self.name)}])' #check if this works properly
+        #return f'set([{repr(self.name)}])' #check if this works properly
+        return {self.name}
         #pass
     def evaluate(self, assignment):
         pass
@@ -64,8 +65,29 @@ class Not(Expr):
         return f'Not({self.arg})' #maybe use repr(self.arg.name) if it doesn't work
         #pass
     def atom_names(self):
-        #return f'Not({self.arg})' #maybe use repr(self.arg.name) if it doesn't work
-        pass
+        #return f'Set({self.arg})' #maybe use repr(self.arg.name) if it doesn't work
+        #conjunctList = list(self.conjuncts)
+        notSet = set()
+        extractAtom = self.arg
+        #print(extractAtom)
+        if isinstance(extractAtom, set) == False: #checks if extractAtom is a set or not, if not, then extract until it is a set
+            #print("gothere")
+            extractAtom = extractAtom.atom_names()
+            #print(extractAtom)
+        notSet = notSet.union(extractAtom)
+        #print("did union")
+        #print(extractAtom)
+        #print(notSet)
+        """
+        for element in conjunctList:
+            extractAtom = element
+            while isinstance(element, str) == False: #checks if element is a string or not, if not, then extract until it is a string
+                extractAtom = extractAtom.atom_names()   #keep calling atom_names() on the element until it is just a string
+
+            conjunctSet.add(extractAtom)             #once element is fully extracted, add it to the set
+        """
+        return notSet
+        #pass
     def evaluate(self, assignment):
         pass
     def to_cnf(self):
@@ -85,26 +107,22 @@ class And(Expr):
             return False
         #pass
     def __repr__(self):
-        #copyAndSet = self.conjuncts.copy()
-        #copyAndList = []
-        #print(len(copyAndSet))
-        #print(copyAndSet)
-        #print(self.conjuncts)
-        #for x in copyAndSet:
-            #nextElement = next(iter(copyAndSet))
-            #print(nextElement)
-            #copyAndList.append(nextElement)
-        #print("and___")
-        #print(copyAndList)
-        #copyAndList = [next(iter(self.conjuncts)) for _ in self.conjuncts]
         copyAndList = list(self.conjuncts)
-        #print(copyAndList)
         return f'And({copyAndList})'
-        #return f'And({self.conjuncts})'
         #pass
     def atom_names(self):
         conjunctList = list(self.conjuncts)
-        print(conjunctList[0].name)
+        conjunctSet = set()
+        for element in conjunctList:
+            extractAtom = element
+            if isinstance(extractAtom, set) == False:  #checks if element is a string or not, if not, then extract until it is a string
+                extractAtom = extractAtom.atom_names() #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
+            conjunctSet = conjunctSet.union(extractAtom)             #once element or elements are fully extracted, union it with the set
+        return conjunctSet
+        #newConjunctList = list(conjunctSet)
+        #return f'set({newConjunctList})'
+
+
         #print(len(self.conjuncts))
         #return f'set([{self.conjuncts}])'
         #pass
@@ -141,7 +159,15 @@ class Or(Expr):
         return f'Or({copyOrList})'
         #pass
     def atom_names(self):
-        return f'set([{repr(self.arg.name)}])'
+        disjunctList = list(self.disjuncts)
+        disjunctSet = set()
+        for element in disjunctList:
+            extractAtom = element
+            if isinstance(extractAtom, set) == False:  #checks if element is a string or not, if not, then extract until it is a string
+                extractAtom = extractAtom.atom_names() #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
+            disjunctSet = disjunctSet.union(extractAtom)             #once element or elements are fully extracted, union it with the set
+        return disjunctSet
+        #return f'set([{repr(self.arg.name)}])'
         #pass
     def evaluate(self, assignment):
         pass
@@ -169,8 +195,15 @@ class Implies(Expr):
         return f'Implies({self.left}, {self.right})'
         #pass
     def atom_names(self):
-        
-        return f'set([{repr(self.arg.name)}])'
+        impList = [self.left, self.right]
+        impSet = set()
+        for element in impList:
+            extractAtom = element
+            if isinstance(extractAtom, set) == False:  #checks if element is a string or not, if not, then extract until it is a string
+                extractAtom = extractAtom.atom_names() #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
+            impSet = impSet.union(extractAtom)                  #once element or elements are fully extracted, union it with the set
+        return impSet
+        #return f'set([{repr(self.arg.name)}])'
         #pass
     def evaluate(self, assignment):
         pass
@@ -195,7 +228,15 @@ class Iff(Expr):
         return f'Iff({self.left}, {self.right})'
         #pass
     def atom_names(self):
-        pass
+        iffList = [self.left, self.right]
+        iffSet = set()
+        for element in iffList:
+            extractAtom = element
+            if isinstance(extractAtom, set) == False:  #checks if element is a string or not, if not, then extract until it is a string
+                extractAtom = extractAtom.atom_names() #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
+            iffSet = iffSet.union(extractAtom)                  #once element or elements are fully extracted, union it with the set
+        return iffSet
+        #pass
     def evaluate(self, assignment):
         pass
     def to_cnf(self):
@@ -300,11 +341,10 @@ a, b, c = map(Atom, "abc")
 print(And(a, Or(Not(b), c))) #should return: And(Atom(a), Or(Not(Atom(b)), Atom(c)))
 
 
-"""
-print("1.3")
+
+print("\n1.3")
 print(Atom("a").atom_names())
 print(Not(Atom("a")).atom_names())
 a, b, c = map(Atom, "abc")
 expr = And(a, Implies(b, Iff(a, c)))
 print(expr.atom_names())
-"""
