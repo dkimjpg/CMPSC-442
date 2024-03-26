@@ -44,7 +44,13 @@ class Atom(Expr):
         return {self.name}
         #pass
     def evaluate(self, assignment):
-        pass
+        #print(assignment) #in case for some strange reason assignment has more than one key
+        if isinstance(assignment, Atom) == True:
+            return self.name
+        atomKeys = assignment.keys()
+        atomKeys = list(atomKeys)
+        return assignment.get(atomKeys[0]) #I have no idea what it wants me to return if evaluate() is called on Atom(), so I'll just return the value in the assignment dictionary (there should only be one key in it, anyway)
+        #pass
     def to_cnf(self):
         pass
 
@@ -71,13 +77,8 @@ class Not(Expr):
         extractAtom = self.arg
         #print(extractAtom)
         if isinstance(extractAtom, set) == False: #checks if extractAtom is a set or not, if not, then extract until it is a set
-            #print("gothere")
             extractAtom = extractAtom.atom_names()
-            #print(extractAtom)
         notSet = notSet.union(extractAtom)
-        #print("did union")
-        #print(extractAtom)
-        #print(notSet)
         """
         for element in conjunctList:
             extractAtom = element
@@ -89,7 +90,52 @@ class Not(Expr):
         return notSet
         #pass
     def evaluate(self, assignment):
-        pass
+        #print(assignment) #in case for some strange reason assignment has more than one key       
+        exprFlag = False
+        #boolExtract = ""
+        #print(self.arg)
+        if isinstance(self.arg, Atom) == False:
+            exprFlag = True
+        if isinstance(self.arg, Atom) == True:
+            boolExtract = self.arg.evaluate(self.arg)
+            #print("boolExtract")
+            #print(boolExtract)
+            return boolExtract
+
+        if exprFlag == True:
+            newBool = self.arg.evaluate(self.arg)
+            if assignment.get(newBool) == True:
+                return False
+            if assignment.get(newBool) == False:
+                return True
+            #if newBool == True:
+                    #return False
+            #if newBool == False:
+                    #return True
+
+        """
+        valAssignment = assignment
+        if isinstance(valAssignment, dict) == False: #checks if valAssignement is a dictionary, if not, extract the dictionary by calling evaluate
+            checkAssignment = valAssignment.evaluate() #checkAssignment should return a boolean value, if I'm not mistaken
+            #print(checkAssignment)
+            #valAssignment = valAssignment.update({realNotKey: checkAssignment}) #update valAssignment so its value is a boolean value
+            if checkAssignment == True:
+                return False
+            else:
+                return True
+        """
+
+        #by this point, it should be confirmed that assignment (which is valAssignment) is a dictionary, so continue with my original code
+        notKeys = assignment.keys()
+        notKeys = list(notKeys)
+        realNotKey = notKeys[0] #there's only one key in the assignment dictionary, so just call it realNotKey
+        valueOfKey = assignment.get(realNotKey)
+        #return not valueOfKey #Honestly, I don't trust Python enough to do this
+        if valueOfKey == True:
+            return False
+        if valueOfKey == False:
+            return True
+        #pass
     def to_cnf(self):
         pass
         
@@ -115,19 +161,61 @@ class And(Expr):
         conjunctSet = set()
         for element in conjunctList:
             extractAtom = element
-            if isinstance(extractAtom, set) == False:  #checks if element is a string or not, if not, then extract until it is a string
-                extractAtom = extractAtom.atom_names() #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
-            conjunctSet = conjunctSet.union(extractAtom)             #once element or elements are fully extracted, union it with the set
+            if isinstance(extractAtom, set) == False:    #checks if element is a string or not, if not, then extract until it is a string
+                extractAtom = extractAtom.atom_names()   #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
+            conjunctSet = conjunctSet.union(extractAtom) #once element or elements are fully extracted, union it with the set
         return conjunctSet
         #newConjunctList = list(conjunctSet)
         #return f'set({newConjunctList})'
 
-
         #print(len(self.conjuncts))
         #return f'set([{self.conjuncts}])'
         #pass
-    def evaluate(self, assignment):
-        pass
+    def evaluate(self, assignment):        
+        exprFlag = False
+        for literal in self.conjuncts: #go through the conjuncts dictionary and check if there are any expressions instead of Atom objects, if there are, set the exprFlag to True
+            if isinstance(literal, Atom) == False: #checks if current element is not an Atom()
+                exprFlag = True
+
+        if exprFlag == True: #need to extract boolean values            
+            listAssignment = []
+            for literal in self.conjuncts:
+                newBool = literal.evaluate(literal) #evaluating literal should yield a list
+                listAssignment.extend(newBool)
+                #if newBool == False: #a literal with a value of False was found, return False
+                    #return False
+
+                """
+                if isinstance(literal, Atom) == False:
+                    newBool = literal.evaluate() #evaluating literal should yield a boolean
+                    if newBool == False:
+                        return False
+                if isinstance(literal, Atom) == True:
+                    if assignment.get(literal) == False: #a literal with a value of False was found, return False
+                        return False
+                """
+            for literal in listAssignment:
+                if assignment.get(literal) == False: #a literal with a value of True was found, return True
+                    return False
+            return True #assuming that not a single False was found in the literals
+
+        for literal in self.disjuncts:
+            boolList = []
+            if isinstance(literal, Atom) == True:
+                boolExtract = literal.evaluate(literal)
+                #print("boolExtract")
+                #print(boolExtract)
+                boolList.extend(boolExtract)
+            return boolList
+        
+        if exprFlag == False: #all entries are just dictionaries (which makes things easier)
+            #andKeys = assignment.keys()
+            for literal in assignment:
+                if assignment.get(literal) == False: #a literal with a value of False was found, return False
+                    return False
+            return True #all literals were True, so return True
+
+        #pass
     def to_cnf(self):
         pass
 
@@ -163,14 +251,56 @@ class Or(Expr):
         disjunctSet = set()
         for element in disjunctList:
             extractAtom = element
-            if isinstance(extractAtom, set) == False:  #checks if element is a string or not, if not, then extract until it is a string
-                extractAtom = extractAtom.atom_names() #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
-            disjunctSet = disjunctSet.union(extractAtom)             #once element or elements are fully extracted, union it with the set
+            if isinstance(extractAtom, set) == False:    #checks if element is a string or not, if not, then extract until it is a string
+                extractAtom = extractAtom.atom_names()   #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
+            disjunctSet = disjunctSet.union(extractAtom) #once element or elements are fully extracted, union it with the set
         return disjunctSet
         #return f'set([{repr(self.arg.name)}])'
         #pass
     def evaluate(self, assignment):
-        pass
+        exprFlag = False
+        for literal in self.disjuncts: #go through the assignment dictionary and check if there are any expressions instead of dictionaries, if there are, set the exprFlag to True
+            if isinstance(literal, Atom) == False:
+                exprFlag = True
+        
+        if exprFlag == True: #need to extract boolean values
+            listAssignment = []
+            for literal in self.disjuncts:
+                newBool = literal.evaluate(literal) #evaluating literal should yield a list of some sort
+                listAssignment.extend(newBool)
+                #if newBool == True: #a literal with a value of True was found, return True
+                    #return True
+                
+                """
+                if isinstance(literal, dict) == False: #literal is not a dictionary
+                    newBool = literal.evaluate() #evaluating literal should yield a boolean
+                    if newBool == True:
+                        return True
+                if isinstance(literal, dict) == True: #literal is a dictionary
+                    if assignment.get(literal) == True: #a literal with a value of True was found, return True
+                        return True
+                """
+            for literal in listAssignment:
+                if assignment.get(literal) == True: #a literal with a value of True was found, return True
+                    return True
+            return False #assuming that not a single True was found in the literals
+        
+        for literal in self.disjuncts:
+            boolList = []
+            if isinstance(literal, Atom) == True:
+                boolExtract = literal.evaluate(literal)
+                #print("boolExtract")
+                #print(boolExtract)
+                boolList.extend(boolExtract)
+            return boolList
+
+        if exprFlag == False: #all entries are just dictionaries (which makes things easier)
+            #andKeys = assignment.keys()
+            for literal in assignment:
+                if assignment.get(literal) == True: #a literal with a value of True was found, return True
+                    return True
+            return False #all literals were False, so return False
+        #pass
     def to_cnf(self):
         pass
 
@@ -201,12 +331,74 @@ class Implies(Expr):
             extractAtom = element
             if isinstance(extractAtom, set) == False:  #checks if element is a string or not, if not, then extract until it is a string
                 extractAtom = extractAtom.atom_names() #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
-            impSet = impSet.union(extractAtom)                  #once element or elements are fully extracted, union it with the set
+            impSet = impSet.union(extractAtom)         #once element or elements are fully extracted, union it with the set
         return impSet
         #return f'set([{repr(self.arg.name)}])'
         #pass
     def evaluate(self, assignment):
-        pass
+        exprFlag = False
+        
+        if isinstance(self.left, Atom) == False:
+            exprFlag = True
+        if isinstance(self.right, Atom) == False:
+            exprFlag = True
+        
+        if exprFlag == True:
+            leftBool = self.left.evaluate(self.left)
+            rightBool = self.right.evaluate(self.right)
+            if assignment.get(leftBool) == True and assignment.get(rightBool) == False:
+                return False
+
+        """
+        for literal in assignment: #go through the assignment dictionary and check if there are any expressions instead of dictionaries, if there are, set the exprFlag to True
+            if isinstance(literal, dict) == False:
+                exprFlag == True
+        """
+
+        if isinstance(self.left, Atom) == True or isinstance(self.right, Atom) == True:
+            boolLeft = self.left.evaluate(assignment)
+            boolRight = self.right.evaluate(assignment)
+            return [boolLeft, boolRight]
+
+        
+        if exprFlag == False:
+            impKeys = assignment.keys()
+            impKeys = list(impKeys)
+            if assignment.get(impKeys[0]) == True and assignment.get(impKeys[1]) == False:
+                return False
+            else:
+                return True
+        
+
+        """
+        trueFlag = False
+        counter = 1
+
+        for literal in assignment: #iterate through all the keys in assignment (which is just a dictionary)
+            #first of all, there should only be two keys in assignment, so in this case, the only thing 
+            # that matters is if the first key is True and the second key is False, so just check for that.
+            
+            valueLiteral = literal
+            if isinstance(literal, dict) == False: #checks if literal is a dictionary, if not, extract the dictionary by calling evaluate
+                valueLiteral = literal.evaluate()
+            
+            #at this point, valueLiteral should be a dictionary, if not, something's wrong with the previous check
+            #print(valueLiteral)
+
+            if counter == 1:
+                if assignment.get(valueLiteral) == True:
+                    trueFlag = True
+            if counter == 2: #indicates that the second literal is being checked
+                if trueFlag == True: #first literal was True
+                    if assignment.get(valueLiteral) == False:
+                        return False #second literal turns out ot be False
+                    else: #the second literal turns out to be True
+                        return True
+                else: #first literal was False
+                    return True
+            counter = 2 #indicates that the first literal has finished checking, the next iteration will check the second literal
+        """
+        #pass
     def to_cnf(self):
         pass
 
@@ -234,11 +426,39 @@ class Iff(Expr):
             extractAtom = element
             if isinstance(extractAtom, set) == False:  #checks if element is a string or not, if not, then extract until it is a string
                 extractAtom = extractAtom.atom_names() #call atom_names() on the element, it will call other functions that also have atom_names() until it reaches atom(), which it will then return a set
-            iffSet = iffSet.union(extractAtom)                  #once element or elements are fully extracted, union it with the set
+            iffSet = iffSet.union(extractAtom)         #once element or elements are fully extracted, union it with the set
         return iffSet
         #pass
     def evaluate(self, assignment):
-        pass
+        exprFlag = False
+        
+        if isinstance(self.left, Atom) == False:
+            exprFlag = True
+        if isinstance(self.right, Atom) == False:
+            exprFlag = True
+        
+        if exprFlag == True:
+            leftBool = self.left.evaluate(self.left)
+            rightBool = self.right.evaluate(self.right)
+            if assignment.get(leftBool) == True and assignment.get(rightBool) == True:
+                return True
+            if assignment.get(leftBool) == False and assignment.get(rightBool) == False:
+                return True
+
+        if isinstance(self.left, Atom) == True or isinstance(self.right, Atom) == True:
+            boolLeft = self.left.evaluate(self.left)
+            boolRight = self.right.evaluate(self.right)
+            return [boolLeft, boolRight]
+        
+        if exprFlag == False:
+            iffKeys = assignment.keys()
+            iffKeys = list(iffKeys)
+            if assignment.get(iffKeys[0]) == True and assignment.get(iffKeys[1]) == True:
+                return True
+            if assignment.get(iffKeys[0]) == False and assignment.get(iffKeys[1]) == False:
+                return True
+            return False
+        #pass
     def to_cnf(self):
         pass
 
@@ -341,10 +561,19 @@ a, b, c = map(Atom, "abc")
 print(And(a, Or(Not(b), c))) #should return: And(Atom(a), Or(Not(Atom(b)), Atom(c)))
 
 
-
 print("\n1.3")
 print(Atom("a").atom_names())
 print(Not(Atom("a")).atom_names())
 a, b, c = map(Atom, "abc")
 expr = And(a, Implies(b, Iff(a, c)))
 print(expr.atom_names())
+
+
+print("\n1.4")
+e = Implies(Atom("a"), Atom("b"))
+print(e.evaluate({"a": False, "b": True})) #should return True
+print(e.evaluate({"a": True, "b": False})) #should return False
+
+a, b, c = map(Atom, "abc")
+e = And(Not(a), Or(b, c))
+print(e.evaluate({"a": False, "b": False,"c": True})) #should return True
