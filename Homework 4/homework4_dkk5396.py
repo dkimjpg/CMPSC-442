@@ -45,11 +45,12 @@ class Atom(Expr):
         #pass
     def evaluate(self, assignment):
         #print(assignment) #in case for some strange reason assignment has more than one key
-        if isinstance(assignment, Atom) == True:
-            return self.name
+        #print(self.name)
+        #if isinstance(self, Atom) == True:
+            #return self.name
         atomKeys = assignment.keys()
         atomKeys = list(atomKeys)
-        return assignment.get(atomKeys[0]) #I have no idea what it wants me to return if evaluate() is called on Atom(), so I'll just return the value in the assignment dictionary (there should only be one key in it, anyway)
+        return assignment.get(self.name) #I have no idea what it wants me to return if evaluate() is called on Atom(), so I'll just return the value in the assignment dictionary (there should only be one key in it, anyway)
         #pass
     def to_cnf(self):
         pass
@@ -450,6 +451,7 @@ class Iff(Expr):
         if exprFlag == True:
             leftBool = self.left.evaluate(assignment)
             rightBool = self.right.evaluate(assignment)
+
             #if assignment.get(leftBool) == True and assignment.get(rightBool) == True:
                 #return True
             #if assignment.get(leftBool) == False and assignment.get(rightBool) == False:
@@ -470,6 +472,7 @@ class Iff(Expr):
         if exprFlag == False:
             iffKeys = assignment.keys()
             iffKeys = list(iffKeys)
+
             if assignment.get(iffKeys[0]) == True and assignment.get(iffKeys[1]) == True:
                 return True
             if assignment.get(iffKeys[0]) == False and assignment.get(iffKeys[1]) == False:
@@ -479,14 +482,72 @@ class Iff(Expr):
     def to_cnf(self):
         pass
 
+def extract(expr): #this should return a list of all the variables(literals, I think) I need
+    exprCurr = expr #current expression, don't really need this but I don't want to go and change all the variable names just in case
+    #exprList = []
+    #while isinstance(exprCurr, list) == False:
+    if isinstance(exprCurr, Atom):
+        #exprList.extend([exprCurr.name])
+        #print(exprCurr.name)
+        return [exprCurr.name]
+    elif isinstance(exprCurr, Not):
+        return extract(exprCurr.arg)
+    elif isinstance(exprCurr, And):
+        tempList = []
+        for x in exprCurr.conjuncts: #iterate through each element in the conjuncts list
+            tempExtract = extract(x)
+            tempList.extend(tempExtract)
+        return tempList
+    elif isinstance(exprCurr, Or):
+        tempList = []
+        for x in exprCurr.disjuncts: #iterate through each element in the conjuncts list
+            tempExtract = extract(x)
+            tempList.extend(tempExtract)
+        return extract(tempList)
+    elif isinstance(exprCurr, Implies):
+        leftExtract = extract(exprCurr.left)
+        #print("left")
+        #print(leftExtract)
+        rightExtract = extract(exprCurr.right)
+        #print("right")
+        #print(rightExtract)
+        leftExtract.extend(rightExtract)
+        #print("leftExtractJoin")
+        #print(leftExtract)
+        return leftExtract
+    elif isinstance(exprCurr, Iff):
+        leftExtract = extract(exprCurr.left)
+        rightExtract = extract(exprCurr.right)
+        leftExtract.extend(rightExtract)
+        return leftExtract
+
 def satisfying_assignments(expr):
-    extractLen = 4 #after extracting the literals, get the length of the list here
+    extractList = extract(expr)
+    #print(extractList)
+    extractLen = len(extractList) #after extracting the literals, get the length of the list here
     boolCombo = list(itertools.product([True,False], repeat = extractLen)) #gives a 2d list of all the possible combinations
+    #print(boolCombo)
     #from here, just iterate through boolCombo and the list of literals I extracted (whenever I get to that) and make dictionaries
     
     #I'm thinking of a for loop that has a length that's the same as boolCombo, and then another for loop inside that has
     # a length of 3 (0, 1, 2). I might need another for loop inside that so I can select the correct letter while making the
     #dictionaries
+
+    listOfAssignments = []
+
+    for rowIndex, row in enumerate(boolCombo):
+        assignDict = {}
+        for colIndex, item in enumerate(row):
+            assignDict.update({extractList[colIndex]:boolCombo[rowIndex][colIndex]})
+        listOfAssignments.append(assignDict)
+    
+    satsifyingAssignmentsList = []
+    for assign in listOfAssignments:
+        if expr.evaluate(assign) == True:
+            satsifyingAssignmentsList.append(assign)
+
+    #print(satsifyingAssignmentsList)
+    return iter(satsifyingAssignmentsList)
 
     """
     extractLen = 4
@@ -610,3 +671,18 @@ print(e.evaluate({"a": True, "b": False})) #should return False
 a, b, c = map(Atom, "abc")
 e = And(Not(a), Or(b, c))
 print(e.evaluate({"a": False, "b": False,"c": True})) #should return True
+
+
+print("\n1.5")
+e = Implies(Atom("a"), Atom("b"))
+a = satisfying_assignments(e)
+#print(a)
+print(next(a))
+print(next(a))
+print(next(a))
+
+e = Iff(Iff(Atom("a"), Atom("b")), Atom("c"))
+#print(e.evaluate({"a": True, "b": True,"c": False}))
+#x = Iff(Atom("a"), Atom("b"))
+#print(x.evaluate({"a": True, "b": True}))
+print(list(satisfying_assignments(e)))
