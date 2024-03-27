@@ -150,7 +150,7 @@ class And(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
-        if self.conjuncts == other.conjuncts: 
+        if self.conjuncts == other.conjuncts:
             return True
         else:
             return False
@@ -232,7 +232,7 @@ class Or(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
-        if self.name == other: 
+        if self.disjuncts == other.disjuncts: 
             return True
         else:
             return False
@@ -320,7 +320,7 @@ class Implies(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
-        if self.name == other: 
+        if self.left == other.left and self.right == other.right: 
             return True
         else:
             return False
@@ -423,7 +423,9 @@ class Iff(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
-        if self.name == other: 
+        if self.left == other.left and self.right == other.right: 
+            return True
+        if self.left == other.right and self.right == other.left:
             return True
         else:
             return False
@@ -647,6 +649,14 @@ print("\n1.1")
 print(Atom("a") == Atom("a")) #should return True
 print(Atom("a") == Atom("b")) #should return False
 print(And(Atom("a"), Not(Atom("b"))) == And(Not(Atom("b")), Atom("a"))) #should return True
+
+print(Or(Atom("a"), Atom("b")) == Or(Atom("b"), Atom("a"))) #should return True
+
+print(Implies(Atom("a"),Atom("b")) == Implies(Atom("a"),Atom("b"))) #should return True
+
+print(Iff(Atom("a"),Atom("b")) == Iff(Atom("a"),Atom("b"))) #should return True
+print(Iff(Atom("a"),Atom("b")) == Iff(Atom("b"),Atom("a"))) #should return True
+print(Iff(Atom("a"),Atom("b")) == Iff(Atom("b"),Atom("b"))) #should return False
 
 
 print("\n1.2")
