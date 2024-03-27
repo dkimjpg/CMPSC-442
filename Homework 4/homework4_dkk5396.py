@@ -53,7 +53,8 @@ class Atom(Expr):
         return assignment.get(self.name) #I have no idea what it wants me to return if evaluate() is called on Atom(), so I'll just return the value in the assignment dictionary (there should only be one key in it, anyway)
         #pass
     def to_cnf(self):
-        pass
+        return self
+        #pass
 
 class Not(Expr):
     def __init__(self, arg):
@@ -129,10 +130,10 @@ class Not(Expr):
         """
 
         #by this point, it should be confirmed that assignment (which is valAssignment) is a dictionary, so continue with my original code
-        notKeys = assignment.keys()
-        notKeys = list(notKeys)
-        realNotKey = notKeys[0] #there's only one key in the assignment dictionary, so just call it realNotKey
-        valueOfKey = assignment.get(realNotKey)
+        #notKeys = assignment.keys()
+        #notKeys = list(notKeys)
+        #realNotKey = notKeys[0] #there's only one key in the assignment dictionary, so just call it realNotKey
+        valueOfKey = assignment.get(self.arg)
         #return not valueOfKey #Honestly, I don't trust Python enough to do this
         if valueOfKey == True:
             return False
@@ -140,7 +141,13 @@ class Not(Expr):
             return True
         #pass
     def to_cnf(self):
-        pass
+        if isinstance(self.arg, Not) == True:
+            return self.arg
+        if isinstance(self.arg, And) == True:
+            return Or(Not(self.arg.disjuncts))
+        if isinstance(self.arg, Or) == True:
+            return And(Not(self.arg.conjuncts))
+        #pass
         
 class And(Expr):
     def __init__(self, *conjuncts):
@@ -180,27 +187,27 @@ class And(Expr):
             if isinstance(literal, Atom) == False: #checks if current element is not an Atom()
                 exprFlag = True
 
-        if exprFlag == True: #need to extract boolean values            
+        #if exprFlag == True: #need to extract boolean values            
             #listAssignment = []
-            for literal in self.conjuncts:
-                newBool = literal.evaluate(assignment) #evaluating literal should yield a list
-                #listAssignment.extend(newBool)
-                if newBool == False: #a literal with a value of False was found, return False
-                    return False
+        for literal in self.conjuncts:
+            newBool = literal.evaluate(assignment) #evaluating literal should yield a list
+            #listAssignment.extend(newBool)
+            if newBool == False: #a literal with a value of False was found, return False
+                return False
 
-                """
-                if isinstance(literal, Atom) == False:
-                    newBool = literal.evaluate() #evaluating literal should yield a boolean
-                    if newBool == False:
-                        return False
-                if isinstance(literal, Atom) == True:
-                    if assignment.get(literal) == False: #a literal with a value of False was found, return False
-                        return False
-                """
-            #for literal in listAssignment:
-                #if assignment.get(literal) == False: #a literal with a value of True was found, return True
-                    #return False
-            return True #assuming that not a single False was found in the literals
+            """
+            if isinstance(literal, Atom) == False:
+                newBool = literal.evaluate() #evaluating literal should yield a boolean
+                if newBool == False:
+                    return False
+            if isinstance(literal, Atom) == True:
+                if assignment.get(literal) == False: #a literal with a value of False was found, return False
+                    return False
+            """
+        #for literal in listAssignment:
+            #if assignment.get(literal) == False: #a literal with a value of True was found, return True
+                #return False
+        return True #assuming that not a single False was found in the literals
 
         """
         for literal in self.disjuncts:
@@ -212,17 +219,22 @@ class And(Expr):
                 boolList.extend(boolExtract)
             return boolList
         """
-        
+        """
         if exprFlag == False: #all entries are just dictionaries (which makes things easier)
             #andKeys = assignment.keys()
             for literal in assignment:
                 if assignment.get(literal) == False: #a literal with a value of False was found, return False
                     return False
             return True #all literals were True, so return True
+        """
 
         #pass
     def to_cnf(self):
-        pass
+        reverseTuple = list(self.conjuncts)
+        reverseTuple.reverse()
+        reverseTuple = tuple(reverseTuple)
+        return And(reverseTuple)
+        #pass
 
 class Or(Expr):
     def __init__(self, *disjuncts):
@@ -309,7 +321,16 @@ class Or(Expr):
             return False #all literals were False, so return False
         #pass
     def to_cnf(self):
-        pass
+        for literal in self.disjuncts:
+            if isinstance(literal, And) == True:
+                disjunctsList = tuple(self.disjuncts)
+                return And(Or(disjunctsList).to_cnf()) #this probably isn't right, but it's the only thing I can think of doing right now.
+        
+        reverseTuple = list(self.disjuncts)
+        reverseTuple.reverse()
+        reverseTuple = tuple(reverseTuple)
+        return Or(reverseTuple) #might want to check this
+        #pass
 
 class Implies(Expr):
     def __init__(self, left, right):
@@ -350,14 +371,14 @@ class Implies(Expr):
         if isinstance(self.right, Atom) == False:
             exprFlag = True
         
-        if exprFlag == True:
-            leftBool = self.left.evaluate(assignment)
-            rightBool = self.right.evaluate(assignment)
-            #if assignment.get(leftBool) == True and assignment.get(rightBool) == False:
-                #return False
-            if leftBool == True and rightBool == False:
-                return False
-            return True
+        #if exprFlag == True:
+        leftBool = self.left.evaluate(assignment)
+        rightBool = self.right.evaluate(assignment)
+        #if assignment.get(leftBool) == True and assignment.get(rightBool) == False:
+            #return False
+        if leftBool == True and rightBool == False:
+            return False
+        return True
 
         """
         for literal in assignment: #go through the assignment dictionary and check if there are any expressions instead of dictionaries, if there are, set the exprFlag to True
@@ -372,14 +393,19 @@ class Implies(Expr):
             return [boolLeft, boolRight]
         """
 
-        
+        """
         if exprFlag == False:
-            impKeys = assignment.keys()
-            impKeys = list(impKeys)
-            if assignment.get(impKeys[0]) == True and assignment.get(impKeys[1]) == False:
+            #impKeys = assignment.keys()
+            #impKeys = list(impKeys)
+            #if assignment.get(impKeys[0]) == True and assignment.get(impKeys[1]) == False:
+            print(assignment)
+            print(assignment.get(self.left))
+            print(assignment.get(self.right))
+            if assignment.get(self.left) == True and assignment.get(self.right) == False:
                 return False
             else:
                 return True
+        """
         
 
         """
@@ -412,7 +438,8 @@ class Implies(Expr):
         """
         #pass
     def to_cnf(self):
-        pass
+        return Or(Not(self.left), self.right)
+        #pass
 
 class Iff(Expr):
     def __init__(self, left, right):
@@ -451,19 +478,19 @@ class Iff(Expr):
         if isinstance(self.right, Atom) == False:
             exprFlag = True
         
-        if exprFlag == True:
-            leftBool = self.left.evaluate(assignment)
-            rightBool = self.right.evaluate(assignment)
+        #if exprFlag == True:
+        leftBool = self.left.evaluate(assignment)
+        rightBool = self.right.evaluate(assignment)
 
-            #if assignment.get(leftBool) == True and assignment.get(rightBool) == True:
-                #return True
-            #if assignment.get(leftBool) == False and assignment.get(rightBool) == False:
-                #return True
-            if leftBool == True and rightBool == True:
-                return True
-            if leftBool == False and rightBool == False:
-                return True
-            return False
+        #if assignment.get(leftBool) == True and assignment.get(rightBool) == True:
+            #return True
+        #if assignment.get(leftBool) == False and assignment.get(rightBool) == False:
+            #return True
+        if leftBool == True and rightBool == True:
+            return True
+        if leftBool == False and rightBool == False:
+            return True
+        return False
 
         """
         if isinstance(self.left, Atom) == True or isinstance(self.right, Atom) == True:
@@ -471,7 +498,7 @@ class Iff(Expr):
             boolRight = self.right.evaluate(assignment)
             return [boolLeft, boolRight]
         """
-        
+        """
         if exprFlag == False:
             iffKeys = assignment.keys()
             iffKeys = list(iffKeys)
@@ -481,9 +508,11 @@ class Iff(Expr):
             if assignment.get(iffKeys[0]) == False and assignment.get(iffKeys[1]) == False:
                 return True
             return False
+        """
         #pass
     def to_cnf(self):
-        pass
+        return And(Implies(self.left, self.right).to_cnf(), Implies(self.right, self.left).to_cnf()) #not sure if And does not need .to_cnf or if they all need it
+        #pass
 
 def extract(expr): #this should return a list of all the variables(literals, I think) I need
     exprCurr = expr #current expression, don't really need this but I don't want to go and change all the variable names just in case
@@ -564,12 +593,16 @@ def satisfying_assignments(expr):
 
 class KnowledgeBase(object):
     def __init__(self):
-        pass
+        self.kbSet = set()
+        #pass
     def get_facts(self):
-        pass
+        return self.kbSet
+        #pass
     def tell(self, expr):
-        pass
+        self.kbSet.add(expr.to_cnf())
+        #pass
     def ask(self, expr):
+        
         pass
 
 ############################################################
@@ -702,3 +735,11 @@ x = Implies(Atom("a"), Atom("b"))
 print(list(satisfying_assignments(x)))
 x = Implies(Implies(Atom("a"), Atom("b")), Atom("c"))
 print(list(satisfying_assignments(x)))
+
+print("\n1.6")
+print(Atom("a").to_cnf())
+a, b, c = map(Atom, "abc")
+print(Iff(a, Or(b, c)).to_cnf())
+print(Or(Atom("a"), Atom("b")).to_cnf())
+a, b, c, d = map(Atom, "abcd")
+print(Or(And(a, b), And(c, d)).to_cnf())
