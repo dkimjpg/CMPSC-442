@@ -357,6 +357,7 @@ class Implies(Expr):
                 #return False
             if leftBool == True and rightBool == False:
                 return False
+            return True
 
         """
         for literal in assignment: #go through the assignment dictionary and check if there are any expressions instead of dictionaries, if there are, set the exprFlag to True
@@ -686,3 +687,8 @@ e = Iff(Iff(Atom("a"), Atom("b")), Atom("c"))
 #x = Iff(Atom("a"), Atom("b"))
 #print(x.evaluate({"a": True, "b": True}))
 print(list(satisfying_assignments(e)))
+
+x = Implies(Atom("a"), Atom("b"))
+print(list(satisfying_assignments(x)))
+x = Implies(Implies(Atom("a"), Atom("b")), Atom("c"))
+print(list(satisfying_assignments(x)))
