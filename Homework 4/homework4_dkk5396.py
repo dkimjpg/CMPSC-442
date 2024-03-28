@@ -31,6 +31,8 @@ class Atom(Expr):
         #these print statements are to check if other is like self.name or if other is like self, need to know the difference
         #print(self.name)
         #print(other.name)
+        #if isinstance(other, Atom) == False:
+            #return False
         if self.name == other: 
             return True
         else:
@@ -64,6 +66,8 @@ class Not(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
+        #if isinstance(other, Not) == False:
+            #return False
         if self.arg == other: 
             return True
         else:
@@ -98,13 +102,18 @@ class Not(Expr):
         #print(self.arg)
         if isinstance(self.arg, Atom) == False:
             exprFlag = True
-        """
+        
         if isinstance(self.arg, Atom) == True:
+            #print(self.arg)
             boolExtract = self.arg.evaluate(assignment)
+            if boolExtract == True:
+                return False
+            if boolExtract == False:
+                return True
             #print("boolExtract")
             #print(boolExtract)
-            return boolExtract
-        """
+            #return boolExtract
+        
 
         if exprFlag == True:
             newBool = self.arg.evaluate(assignment)
@@ -141,12 +150,25 @@ class Not(Expr):
             return True
         #pass
     def to_cnf(self):
+        print("got into not")
         if isinstance(self.arg, Not) == True:
             return self.arg
-        if isinstance(self.arg, And) == True:
-            return Or(Not(self.arg.disjuncts))
+        if isinstance(self.arg, And) == True: #try to just iterate through .disjuncts and apply Not to each one, then add it to a tuple (or a list, I'm not sure) and then put that tuple in the return that I have right now
+            notList = []
+            for x in self.arg.conjuncts:
+                #print(x)
+                notList.append(Not(x))
+            notTuple = tuple(notList)
+            return Or(notTuple)
         if isinstance(self.arg, Or) == True:
-            return And(Not(self.arg.conjuncts))
+            notList = []
+            for x in self.arg.disjuncts:
+                
+                notList.append(Not(x))
+            notTuple = tuple(notList)
+            return And(notTuple)
+        #if isinstance(self.arg, Implies) == True:
+
         #pass
         
 class And(Expr):
@@ -157,7 +179,10 @@ class And(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
-        if self.conjuncts == other.conjuncts:
+        #if isinstance(other, And) == False:
+            #return False
+        #if self.conjuncts == other.conjuncts:
+        if self.conjuncts == other:
             return True
         else:
             return False
@@ -192,6 +217,7 @@ class And(Expr):
         for literal in self.conjuncts:
             newBool = literal.evaluate(assignment) #evaluating literal should yield a list
             #listAssignment.extend(newBool)
+            #print(literal, newBool)
             if newBool == False: #a literal with a value of False was found, return False
                 return False
 
@@ -207,6 +233,7 @@ class And(Expr):
         #for literal in listAssignment:
             #if assignment.get(literal) == False: #a literal with a value of True was found, return True
                 #return False
+        #print(self.conjuncts)
         return True #assuming that not a single False was found in the literals
 
         """
@@ -230,10 +257,21 @@ class And(Expr):
 
         #pass
     def to_cnf(self):
-        reverseTuple = list(self.conjuncts)
-        reverseTuple.reverse()
-        reverseTuple = tuple(reverseTuple)
-        return And(reverseTuple)
+        conjunctsList = []
+        for literal in self.conjuncts:
+            conjunctsList.append(literal.to_cnf())
+        return And(tuple(conjunctsList))
+        """
+        for literal in self.conjuncts:
+            if isinstance(literal, And) == True:
+                conjunctsList = tuple(self.conjuncts)
+                return And(Or(conjunctsList).to_cnf())
+        """
+
+        #reverseTuple = list(self.conjuncts)
+        #reverseTuple.reverse()
+        #reverseTuple = tuple(reverseTuple)
+        #return And(reverseTuple)
         #pass
 
 class Or(Expr):
@@ -244,7 +282,12 @@ class Or(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
-        if self.disjuncts == other.disjuncts: 
+        #print(f'selfDisjunct: {self.disjuncts}')
+        #print(f'other: {other}')
+        #if self.disjuncts == other.disjuncts:
+        #if isinstance(other, Or) == False:
+            #return False
+        if self.disjuncts == other: #check this
             return True
         else:
             return False
@@ -321,14 +364,73 @@ class Or(Expr):
             return False #all literals were False, so return False
         #pass
     def to_cnf(self):
-        for literal in self.disjuncts:
+        #print("or rightnow")
+        
+        for literal in self.disjuncts: #checks for any And that is inside Or, does distributivity of Or over And if true
             if isinstance(literal, And) == True:
+                #print("in or right now")
                 disjunctsList = tuple(self.disjuncts)
                 return And(Or(disjunctsList).to_cnf()) #this probably isn't right, but it's the only thing I can think of doing right now.
         
+        #self.disjuncts is a frozen set, so I need to convert it to something else before changing it
+        copyDisjuncts = list(self.disjuncts)
+        #print(copyDisjuncts)
+
+        
+        for literal in copyDisjuncts: #checks for any Or that is inside Or, simplifies to take out the Or            
+            if isinstance(literal, Or) == True:
+                #print("in or of ORs right now")
+                #print(self.disjuncts)
+                #print(literal)
+                orLiteralList = []
+                for orLiterals in literal.disjuncts:
+                    orLiteralList.append(orLiterals)
+                copyDisjuncts.extend(orLiteralList)
+                print(f'copyDisjuncts: {copyDisjuncts}')
+                print(f'literal: {literal}')
+                indexOfLiteral = copyDisjuncts.index(literal)
+                copyDisjuncts.pop(indexOfLiteral)
+                #print("changedsomething")
+                #print(copyDisjuncts)
+                
+                #disjunctsList = list(self.disjuncts)
+                #literal = tuple(orLiteralList) #disjunctsList.extend(list(literal.disjuncts))
+                #literal = "crap"
+                #copyDisjuncts[literal] = "crap"
+                #print(literal)
+                #return tuple(disjunctsList)
+            #print(literal)
+            #print(copyDisjuncts)
+        #print(copyDisjuncts)
+        return Or(tuple(copyDisjuncts))
+        
+
+        #for literal in copyDisjuncts: #checks for any Or that is inside Or, simplifies to take out the Or
+        """
+        for literal in range(0, len(copyDisjuncts)):
+            if isinstance(copyDisjuncts[literal], Or) == True:
+                print("in or of ORs right now")
+                #print(self.disjuncts)
+                #print(copyDisjuncts[literal])
+                orLiteralList = []
+                for orLiterals in copyDisjuncts[literal].disjuncts:
+                    orLiteralList.append(orLiterals)
+                #disjunctsList = list(self.disjuncts)
+                #literal = tuple(orLiteralList) #disjunctsList.extend(list(literal.disjuncts))
+                copyDisjuncts[literal] = tuple(orLiteralList)
+                #copyDisjuncts[literal] = "crap"
+                #print(literal)
+                #return tuple(disjunctsList)
+            #print(copyDisjuncts[literal])
+            #print(copyDisjuncts)
+        """
+        #print(copyDisjuncts)
+        return Or(tuple(copyDisjuncts))
+
         reverseTuple = list(self.disjuncts)
         reverseTuple.reverse()
         reverseTuple = tuple(reverseTuple)
+        #return reverseTuple
         return Or(reverseTuple) #might want to check this
         #pass
 
@@ -341,6 +443,8 @@ class Implies(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
+        #if isinstance(other, Implies) == False:
+            #return False
         if self.left == other.left and self.right == other.right: 
             return True
         else:
@@ -438,7 +542,14 @@ class Implies(Expr):
         """
         #pass
     def to_cnf(self):
-        return Or(Not(self.left), self.right)
+        #print("asdfasdf")
+        #print(self.left)
+        #print(self.left.to_cnf())
+        #print(self.right)
+        #print(self.right.to_cnf())
+        #return Or(Not(self.left).to_cnf(), self.right.to_cnf())
+        
+        return Or(Not(self.left), self.right).to_cnf()
         #pass
 
 class Iff(Expr):
@@ -450,6 +561,8 @@ class Iff(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
+        #if isinstance(other, Iff) == False:
+            #return False
         if self.left == other.left and self.right == other.right: 
             return True
         if self.left == other.right and self.right == other.left:
@@ -511,7 +624,7 @@ class Iff(Expr):
         """
         #pass
     def to_cnf(self):
-        return And(Implies(self.left, self.right).to_cnf(), Implies(self.right, self.left).to_cnf()) #not sure if And does not need .to_cnf or if they all need it
+        return And(Implies(self.left, self.right), Implies(self.right, self.left)).to_cnf() #not sure if And does not need .to_cnf or if they all need it
         #pass
 
 def extract(expr): #this should return a list of all the variables(literals, I think) I need
@@ -711,10 +824,20 @@ print("\n1.4")
 e = Implies(Atom("a"), Atom("b"))
 print(e.evaluate({"a": False, "b": True})) #should return True
 print(e.evaluate({"a": True, "b": False})) #should return False
-
+print("\n")
 a, b, c = map(Atom, "abc")
-e = And(Not(a), Or(b, c))
-print(e.evaluate({"a": False, "b": False,"c": True})) #should return True
+e = And(Not(a), Or(b, c)) #This would be ~a /\ (b \/ c) which is also ~a AND (b OR c)
+print(e.evaluate({"a": False, "b": False, "c": True})) #should return True
+"""
+print(e.evaluate({"a": True, "b": True, "c": True})) #False
+print(e.evaluate({"a": True, "b": True, "c": False})) #False
+print(e.evaluate({"a": True, "b": False, "c": True})) #False
+print(e.evaluate({"a": True, "b": False, "c": False})) #False
+print(e.evaluate({"a": False, "b": True, "c": True})) #True
+print(e.evaluate({"a": False, "b": True, "c": False})) #True
+print(e.evaluate({"a": False, "b": False, "c": False})) #False
+"""
+
 
 
 print("\n1.5")
