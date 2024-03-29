@@ -360,8 +360,9 @@ class Or(Expr):
         #if self.disjuncts == other.disjuncts:
         #if isinstance(other, Or) == False:
             #return False
-        if self.disjuncts == other: #check this
+        if self.disjuncts == other or other == self.disjuncts: #check this
             return True
+
         else:
             return False
         #pass
@@ -491,23 +492,81 @@ class Or(Expr):
         
         if checkAndFlag == True: #at this point, I'm just assuming there's only going to be two things for an And whenever I need to implement distributivity of Or over And
             andExpr = list(secondDisjunctsCopy[andIndex].conjuncts)
-            andTupleExtract = []
-            for contents in andExpr[0]:
-                andTupleExtract.append(contents)
-            andExpr = andTupleExtract
-            print(f'andExpr: {andExpr}')
-            print(f'andExpr[0]: {andExpr[0]}')
-            print("gniwgesfojaesiofjiojgiorjiogjwioguorgiuoq4wgtiuqeiugtqeiugiuqegiuogwiuoniuogf")
-            print(f'andExpr: {andExpr}')
-            for literal in secondDisjunctsCopy:
-                if isinstance(literal, And) == False:
-                    distributivityList.append(Or(tuple([literal, andExpr[0]])))
-                    distributivityList.append(Or(tuple([literal, andExpr[1]])))
-            print(f'distributivity List: {distributivityList}')
-            return And(tuple(distributivityList))
+            print(f'andExpr before tupleExtract: {andExpr}')
+            if isinstance(andExpr[0], tuple) == True:                
+                andTupleExtract = []
+                for contents in andExpr[0]:
+                    andTupleExtract.append(contents)
+                andExpr = andTupleExtract
+                print(f'andExpr: {andExpr}')
+                print(f'andExpr[0]: {andExpr[0]}')
+                print("gniwgesfojaesiofjiojgiorjiogjwioguorgiuoq4wgtiuqeiugtqeiugiuqegiuogwiuoniuogf")
+                print(f'andExpr: {andExpr}')
+                countAnds = len(secondDisjunctsCopy)
+                countAndsCounter = 0
+                for literal in secondDisjunctsCopy:
+                    if isinstance(literal, And) == True:
+                        countAndsCounter = countAndsCounter + 1
+                if countAndsCounter == countAnds: #it's all Ands
+                    finalOrList = []
+                    extractAnds = []
+                    for p in secondDisjunctsCopy:
+                        for extr in p.conjuncts:
+                            for exxxx in extr:
+                                #print(exxxx)
+                                extractAnds.append(exxxx)
+                    print(f'extractAnds: {extractAnds}')
+                    for extAnd in extractAnds:
+                        for extPair in extractAnds:
+                            #print(extAnd)
+                            #print(extPair)
+                            pair = [extAnd, extPair]
+                            makeOrPair = Or(tuple(pair))
+                            if not(extAnd == extPair):
+                                if makeOrPair not in finalOrList:
+                                    if len(finalOrList) == 0:
+                                            finalOrList.append(makeOrPair)
+                                    
+                                    for go in finalOrList:
+                                        if not(makeOrPair == go) and makeOrPair not in finalOrList:
+                                            finalOrList.append(makeOrPair)
+                    return And(tuple(finalOrList))
+
+                for literal in secondDisjunctsCopy:
+                    if isinstance(literal, And) == False:
+                        distributivityList.append(Or(tuple([literal, andExpr[0]])))
+                        distributivityList.append(Or(tuple([literal, andExpr[1]])))
+                print(f'distributivity List: {distributivityList}')
+                return And(tuple(distributivityList))
+            """
+            elif isinstance(andExpr[0], tuple) == False:
+                checkIfAllAndsFlag = True
+                for literal in secondDisjunctsCopy:
+                    if isinstance(literal, And) == False:
+                        checkIfAllAndsFlag = False
+                        
+                        print(f'literal: {literal}')
+                        conjunctsList = list(literal.conjuncts)
+                        print(f'conjunctsList: {conjunctsList}')
+                        print(f'conjunctsList[0]: {conjunctsList[0]}')                        
+                        distributivityList.append(Or(tuple(literal,)))
+                        distributivityList.append(Or(tuple(literal,)))
+                        
+                #print(f'AndTuple: {And(tuple(distributivityList))}')
+                #return And(tuple(distributivityList))
+            """
 
         print("checking all literals in Or")
         print(self.disjuncts)
+
+        #checks if all elements are Atoms
+        allAtomCheckFlag = True
+        for literal in self.disjuncts:
+            if isinstance(literal, Atom) == False:
+                allAtomCheckFlag = False
+        if allAtomCheckFlag == True:
+            return Or(tuple(self.disjuncts))
+
         disjunctsList = []
 
         for literal in self.disjuncts: #checks for any And that is inside Or, does distributivity of Or over And if true
@@ -603,62 +662,7 @@ class Implies(Expr):
             return False
         return True
 
-        """
-        for literal in assignment: #go through the assignment dictionary and check if there are any expressions instead of dictionaries, if there are, set the exprFlag to True
-            if isinstance(literal, dict) == False:
-                exprFlag == True
-        """
 
-        """
-        if isinstance(self.left, Atom) == True or isinstance(self.right, Atom) == True:
-            boolLeft = self.left.evaluate(assignment)
-            boolRight = self.right.evaluate(assignment)
-            return [boolLeft, boolRight]
-        """
-
-        """
-        if exprFlag == False:
-            #impKeys = assignment.keys()
-            #impKeys = list(impKeys)
-            #if assignment.get(impKeys[0]) == True and assignment.get(impKeys[1]) == False:
-            print(assignment)
-            print(assignment.get(self.left))
-            print(assignment.get(self.right))
-            if assignment.get(self.left) == True and assignment.get(self.right) == False:
-                return False
-            else:
-                return True
-        """
-        
-
-        """
-        trueFlag = False
-        counter = 1
-
-        for literal in assignment: #iterate through all the keys in assignment (which is just a dictionary)
-            #first of all, there should only be two keys in assignment, so in this case, the only thing 
-            # that matters is if the first key is True and the second key is False, so just check for that.
-            
-            valueLiteral = literal
-            if isinstance(literal, dict) == False: #checks if literal is a dictionary, if not, extract the dictionary by calling evaluate
-                valueLiteral = literal.evaluate()
-            
-            #at this point, valueLiteral should be a dictionary, if not, something's wrong with the previous check
-            #print(valueLiteral)
-
-            if counter == 1:
-                if assignment.get(valueLiteral) == True:
-                    trueFlag = True
-            if counter == 2: #indicates that the second literal is being checked
-                if trueFlag == True: #first literal was True
-                    if assignment.get(valueLiteral) == False:
-                        return False #second literal turns out ot be False
-                    else: #the second literal turns out to be True
-                        return True
-                else: #first literal was False
-                    return True
-            counter = 2 #indicates that the first literal has finished checking, the next iteration will check the second literal
-        """
         #pass
     def to_cnf(self):
         #print("asdfasdf")
@@ -724,23 +728,6 @@ class Iff(Expr):
             return True
         return False
 
-        """
-        if isinstance(self.left, Atom) == True or isinstance(self.right, Atom) == True:
-            boolLeft = self.left.evaluate(assignment)
-            boolRight = self.right.evaluate(assignment)
-            return [boolLeft, boolRight]
-        """
-        """
-        if exprFlag == False:
-            iffKeys = assignment.keys()
-            iffKeys = list(iffKeys)
-
-            if assignment.get(iffKeys[0]) == True and assignment.get(iffKeys[1]) == True:
-                return True
-            if assignment.get(iffKeys[0]) == False and assignment.get(iffKeys[1]) == False:
-                return True
-            return False
-        """
         #pass
     def to_cnf(self):
         print("Iff")
