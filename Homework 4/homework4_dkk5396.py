@@ -55,6 +55,7 @@ class Atom(Expr):
         return assignment.get(self.name) #I have no idea what it wants me to return if evaluate() is called on Atom(), so I'll just return the value in the assignment dictionary (there should only be one key in it, anyway)
         #pass
     def to_cnf(self):
+        print("Atom")
         return self
         #pass
 
@@ -150,23 +151,31 @@ class Not(Expr):
             return True
         #pass
     def to_cnf(self):
-        print("got into not")
+        #print("got into not")
+        print("Not")
+        if isinstance(self.arg, Atom) == True:
+            return Not(self.arg)
         if isinstance(self.arg, Not) == True:
+            #print(f'selfArg here: {self.arg}')
             return self.arg
         if isinstance(self.arg, And) == True: #try to just iterate through .disjuncts and apply Not to each one, then add it to a tuple (or a list, I'm not sure) and then put that tuple in the return that I have right now
+            #print("went into and")
             notList = []
             for x in self.arg.conjuncts:
-                #print(x)
                 notList.append(Not(x))
             notTuple = tuple(notList)
-            return Or(notTuple)
+            return Or(notTuple).to_cnf()
         if isinstance(self.arg, Or) == True:
+            #print("went into or")
             notList = []
             for x in self.arg.disjuncts:
-                
                 notList.append(Not(x))
             notTuple = tuple(notList)
-            return And(notTuple)
+            print(f'notList: {notList}')
+            #print(notList[0])
+            #print(f'notTuple: {notTuple}')
+            #print(notTuple[0])
+            return And(notTuple).to_cnf()
         #if isinstance(self.arg, Implies) == True:
 
         #pass
@@ -257,9 +266,73 @@ class And(Expr):
 
         #pass
     def to_cnf(self):
+        
+        #print(self.conjuncts)
+        tupleExtractionList = []
+        copyConjuncts = list(self.conjuncts)
+        while isinstance(copyConjuncts[0], tuple) == True:
+            for contents in copyConjuncts[0]:
+                tupleExtractionList.append(contents)
+            copyConjuncts = tupleExtractionList
+        #print(f'copyConjuncts: {copyConjuncts}')
+        #print(f'copyConjuncts: {copyConjuncts[0]}')
+
+        checkAndFlag = False
+        print("CHECK FOR ANDS RIGHT NOW")
+        print(f'copyConjucts before checkand{copyConjuncts}')
+        print(copyConjuncts[0])
+        for literal in copyConjuncts: #checks for any Or that is inside Or, simplifies to take out the Or            
+            if isinstance(literal, And) == True:
+                print(f'checkAndFlag--------------------: {checkAndFlag}')
+                checkAndFlag = True
+                #print(self.disjuncts)
+                #print(literal)
+                orLiteralList = []
+                for orLiterals in literal.conjuncts:
+                    orLiteralList.append(orLiterals)
+                copyConjuncts.extend(orLiteralList)
+                #print(f'copyDisjuncts: {copyConjuncts}')
+                #print(f'literal: {literal}')
+                indexOfLiteral = copyConjuncts.index(literal)
+                copyConjuncts.pop(indexOfLiteral)
+        
+        if checkAndFlag == True:
+            return And(tuple(copyConjuncts))
+        
+
         conjunctsList = []
-        for literal in self.conjuncts:
+        
+        iterateList = list(self.conjuncts)
+        if isinstance(iterateList[0], tuple):
+            iterateList = tupleExtractionList
+        #iterateList = iterateList[0]
+        #print(iterateList)
+        #print(f'iterateList[0]: {iterateList[0]}')
+        #print(f'type of iterateList[0]: {type(iterateList[0])}')
+        for literal in iterateList:
+            #print(f'iterate literal: {literal}')
             conjunctsList.append(literal.to_cnf())
+        print("And")
+        print(f'conjunctsList: ~~ {conjunctsList}')
+        
+        for literal in conjunctsList: #checks for any Or that is inside Or, simplifies to take out the Or            
+            if isinstance(literal, And) == True:
+                print(f'checkAgainFlag~~~~~~~~~~~~--------: {checkAndFlag}')
+                checkAndFlag = True
+                #print(self.disjuncts)
+                #print(literal)
+                orLiteralList = []
+                for orLiterals in literal.conjuncts:
+                    orLiteralList.append(orLiterals)
+                conjunctsList.extend(orLiteralList)
+                #print(f'copyDisjuncts: {copyConjuncts}')
+                #print(f'literal: {literal}')
+                indexOfLiteral = conjunctsList.index(literal)
+                conjunctsList.pop(indexOfLiteral)
+
+        #if checkAndFlag == True:
+            #return And(tuple(conjunctsList))
+        
         return And(tuple(conjunctsList))
         """
         for literal in self.conjuncts:
@@ -366,19 +439,21 @@ class Or(Expr):
     def to_cnf(self):
         #print("or rightnow")
         
-        for literal in self.disjuncts: #checks for any And that is inside Or, does distributivity of Or over And if true
-            if isinstance(literal, And) == True:
-                #print("in or right now")
-                disjunctsList = tuple(self.disjuncts)
-                return And(Or(disjunctsList).to_cnf()) #this probably isn't right, but it's the only thing I can think of doing right now.
-        
         #self.disjuncts is a frozen set, so I need to convert it to something else before changing it
-        copyDisjuncts = list(self.disjuncts)
+        
+        tupleExtractionList = []
+        copyDisjuncts = list(self.disjuncts)        
+        if isinstance(copyDisjuncts[0], tuple) == True:
+            for contents in copyDisjuncts[0]:
+                tupleExtractionList.append(contents)
+            copyDisjuncts = tupleExtractionList
+
         #print(copyDisjuncts)
 
-        
+        checkOrFlag = False
         for literal in copyDisjuncts: #checks for any Or that is inside Or, simplifies to take out the Or            
             if isinstance(literal, Or) == True:
+                checkOrFlag = True
                 #print("in or of ORs right now")
                 #print(self.disjuncts)
                 #print(literal)
@@ -390,19 +465,61 @@ class Or(Expr):
                 print(f'literal: {literal}')
                 indexOfLiteral = copyDisjuncts.index(literal)
                 copyDisjuncts.pop(indexOfLiteral)
-                #print("changedsomething")
-                #print(copyDisjuncts)
-                
-                #disjunctsList = list(self.disjuncts)
-                #literal = tuple(orLiteralList) #disjunctsList.extend(list(literal.disjuncts))
-                #literal = "crap"
-                #copyDisjuncts[literal] = "crap"
-                #print(literal)
-                #return tuple(disjunctsList)
-            #print(literal)
-            #print(copyDisjuncts)
-        #print(copyDisjuncts)
-        return Or(tuple(copyDisjuncts))
+        
+        print("Or")
+
+        if checkOrFlag == True:
+            return Or(tuple(copyDisjuncts))
+
+        checkAndFlag = False
+        secondDisjunctsCopy = list(self.disjuncts)
+        if isinstance(secondDisjunctsCopy[0], tuple):
+            secondDisjunctsCopy = tupleExtractionList
+            print("got here ----------------------")
+        print(f'secondDisjuncts: {secondDisjunctsCopy}')
+        print(f'secondDisjuncts[0]: {secondDisjunctsCopy[0]}')
+        andIndex = 0 #assumes that there is only one And in an Or, if there's multiple, I've got no idea how to implement distributivity of Or over And
+        for literal in secondDisjunctsCopy:
+            if isinstance(literal, And) == True:
+                print(f'checkAndFlag is True')
+                checkAndFlag = True
+                andIndex = secondDisjunctsCopy.index(literal)
+
+        
+        
+        distributivityList = []
+        
+        if checkAndFlag == True: #at this point, I'm just assuming there's only going to be two things for an And whenever I need to implement distributivity of Or over And
+            andExpr = list(secondDisjunctsCopy[andIndex].conjuncts)
+            andTupleExtract = []
+            for contents in andExpr[0]:
+                andTupleExtract.append(contents)
+            andExpr = andTupleExtract
+            print(f'andExpr: {andExpr}')
+            print(f'andExpr[0]: {andExpr[0]}')
+            print("gniwgesfojaesiofjiojgiorjiogjwioguorgiuoq4wgtiuqeiugtqeiugiuqegiuogwiuoniuogf")
+            print(f'andExpr: {andExpr}')
+            for literal in secondDisjunctsCopy:
+                if isinstance(literal, And) == False:
+                    distributivityList.append(Or(tuple([literal, andExpr[0]])))
+                    distributivityList.append(Or(tuple([literal, andExpr[1]])))
+            print(f'distributivity List: {distributivityList}')
+            return And(tuple(distributivityList))
+
+        print("checking all literals in Or")
+        print(self.disjuncts)
+        disjunctsList = []
+
+        for literal in self.disjuncts: #checks for any And that is inside Or, does distributivity of Or over And if true
+            print(f'literal in disjunctsList: {literal}')
+            disjunctsList.append(literal.to_cnf())
+            #if isinstance(literal, And) == True:
+                #print("in or right now")
+                #disjunctsList = tuple(self.disjuncts)    
+        print(f'disjunctsList after stuff: {disjunctsList}')
+        return Or(tuple(disjunctsList)).to_cnf()
+        #return And(Or(disjunctsList).to_cnf()) #this probably isn't right, but it's the only thing I can think of doing right now.
+
         
 
         #for literal in copyDisjuncts: #checks for any Or that is inside Or, simplifies to take out the Or
@@ -424,6 +541,7 @@ class Or(Expr):
             #print(copyDisjuncts[literal])
             #print(copyDisjuncts)
         """
+        """
         #print(copyDisjuncts)
         return Or(tuple(copyDisjuncts))
 
@@ -432,6 +550,7 @@ class Or(Expr):
         reverseTuple = tuple(reverseTuple)
         #return reverseTuple
         return Or(reverseTuple) #might want to check this
+        """
         #pass
 
 class Implies(Expr):
@@ -548,7 +667,7 @@ class Implies(Expr):
         #print(self.right)
         #print(self.right.to_cnf())
         #return Or(Not(self.left).to_cnf(), self.right.to_cnf())
-        
+        print("Implies")
         return Or(Not(self.left), self.right).to_cnf()
         #pass
 
@@ -624,6 +743,7 @@ class Iff(Expr):
         """
         #pass
     def to_cnf(self):
+        print("Iff")
         return And(Implies(self.left, self.right), Implies(self.right, self.left)).to_cnf() #not sure if And does not need .to_cnf or if they all need it
         #pass
 
@@ -861,8 +981,11 @@ print(list(satisfying_assignments(x)))
 
 print("\n1.6")
 print(Atom("a").to_cnf())
+print()
 a, b, c = map(Atom, "abc")
 print(Iff(a, Or(b, c)).to_cnf())
+print("\n")
 print(Or(Atom("a"), Atom("b")).to_cnf())
+print("\n")
 a, b, c, d = map(Atom, "abcd")
 print(Or(And(a, b), And(c, d)).to_cnf())
