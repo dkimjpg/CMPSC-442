@@ -86,33 +86,22 @@ class Not(Expr):
         if isinstance(extractAtom, set) == False: #checks if extractAtom is a set or not, if not, then extract until it is a set
             extractAtom = extractAtom.atom_names()
         notSet = notSet.union(extractAtom)
-        """
-        for element in conjunctList:
-            extractAtom = element
-            while isinstance(element, str) == False: #checks if element is a string or not, if not, then extract until it is a string
-                extractAtom = extractAtom.atom_names()   #keep calling atom_names() on the element until it is just a string
 
-            conjunctSet.add(extractAtom)             #once element is fully extracted, add it to the set
-        """
         return notSet
         #pass
     def evaluate(self, assignment):
         #print(assignment) #in case for some strange reason assignment has more than one key       
         exprFlag = False
         #boolExtract = ""
-        #print(self.arg)
         if isinstance(self.arg, Atom) == False:
             exprFlag = True
         
         if isinstance(self.arg, Atom) == True:
-            #print(self.arg)
             boolExtract = self.arg.evaluate(assignment)
             if boolExtract == True:
                 return False
             if boolExtract == False:
                 return True
-            #print("boolExtract")
-            #print(boolExtract)
             #return boolExtract
         
 
@@ -127,17 +116,7 @@ class Not(Expr):
             if newBool == False:
                     return True
 
-        """
-        valAssignment = assignment
-        if isinstance(valAssignment, dict) == False: #checks if valAssignement is a dictionary, if not, extract the dictionary by calling evaluate
-            checkAssignment = valAssignment.evaluate() #checkAssignment should return a boolean value, if I'm not mistaken
-            #print(checkAssignment)
-            #valAssignment = valAssignment.update({realNotKey: checkAssignment}) #update valAssignment so its value is a boolean value
-            if checkAssignment == True:
-                return False
-            else:
-                return True
-        """
+
 
         #by this point, it should be confirmed that assignment (which is valAssignment) is a dictionary, so continue with my original code
         #notKeys = assignment.keys()
@@ -151,30 +130,21 @@ class Not(Expr):
             return True
         #pass
     def to_cnf(self):
-        #print("got into not")
-        print("Not")
         if isinstance(self.arg, Atom) == True:
             return Not(self.arg)
         if isinstance(self.arg, Not) == True:
-            #print(f'selfArg here: {self.arg}')
             return self.arg
         if isinstance(self.arg, And) == True: #try to just iterate through .disjuncts and apply Not to each one, then add it to a tuple (or a list, I'm not sure) and then put that tuple in the return that I have right now
-            #print("went into and")
             notList = []
             for x in self.arg.conjuncts:
                 notList.append(Not(x))
             notTuple = tuple(notList)
             return Or(notTuple).to_cnf()
         if isinstance(self.arg, Or) == True:
-            #print("went into or")
             notList = []
             for x in self.arg.disjuncts:
                 notList.append(Not(x))
             notTuple = tuple(notList)
-            print(f'notList: {notList}')
-            #print(notList[0])
-            #print(f'notTuple: {notTuple}')
-            #print(notTuple[0])
             return And(notTuple).to_cnf()
         #if isinstance(self.arg, Implies) == True:
 
@@ -212,7 +182,6 @@ class And(Expr):
         #newConjunctList = list(conjunctSet)
         #return f'set({newConjunctList})'
 
-        #print(len(self.conjuncts))
         #return f'set([{self.conjuncts}])'
         #pass
     def evaluate(self, assignment):        
@@ -226,73 +195,34 @@ class And(Expr):
         for literal in self.conjuncts:
             newBool = literal.evaluate(assignment) #evaluating literal should yield a list
             #listAssignment.extend(newBool)
-            #print(literal, newBool)
             if newBool == False: #a literal with a value of False was found, return False
                 return False
 
-            """
-            if isinstance(literal, Atom) == False:
-                newBool = literal.evaluate() #evaluating literal should yield a boolean
-                if newBool == False:
-                    return False
-            if isinstance(literal, Atom) == True:
-                if assignment.get(literal) == False: #a literal with a value of False was found, return False
-                    return False
-            """
+
         #for literal in listAssignment:
             #if assignment.get(literal) == False: #a literal with a value of True was found, return True
                 #return False
-        #print(self.conjuncts)
         return True #assuming that not a single False was found in the literals
 
-        """
-        for literal in self.disjuncts:
-            boolList = []
-            if isinstance(literal, Atom) == True:
-                boolExtract = literal.evaluate(assignment)
-                #print("boolExtract")
-                #print(boolExtract)
-                boolList.extend(boolExtract)
-            return boolList
-        """
-        """
-        if exprFlag == False: #all entries are just dictionaries (which makes things easier)
-            #andKeys = assignment.keys()
-            for literal in assignment:
-                if assignment.get(literal) == False: #a literal with a value of False was found, return False
-                    return False
-            return True #all literals were True, so return True
-        """
+
 
         #pass
-    def to_cnf(self):
-        
-        #print(self.conjuncts)
+    def to_cnf(self):        
         tupleExtractionList = []
         copyConjuncts = list(self.conjuncts)
         while isinstance(copyConjuncts[0], tuple) == True:
             for contents in copyConjuncts[0]:
                 tupleExtractionList.append(contents)
             copyConjuncts = tupleExtractionList
-        #print(f'copyConjuncts: {copyConjuncts}')
-        #print(f'copyConjuncts: {copyConjuncts[0]}')
 
         checkAndFlag = False
-        print("CHECK FOR ANDS RIGHT NOW")
-        print(f'copyConjucts before checkand{copyConjuncts}')
-        print(copyConjuncts[0])
         for literal in copyConjuncts: #checks for any Or that is inside Or, simplifies to take out the Or            
             if isinstance(literal, And) == True:
-                print(f'checkAndFlag--------------------: {checkAndFlag}')
                 checkAndFlag = True
-                #print(self.disjuncts)
-                #print(literal)
                 orLiteralList = []
                 for orLiterals in literal.conjuncts:
                     orLiteralList.append(orLiterals)
                 copyConjuncts.extend(orLiteralList)
-                #print(f'copyDisjuncts: {copyConjuncts}')
-                #print(f'literal: {literal}')
                 indexOfLiteral = copyConjuncts.index(literal)
                 copyConjuncts.pop(indexOfLiteral)
         
@@ -306,27 +236,16 @@ class And(Expr):
         if isinstance(iterateList[0], tuple):
             iterateList = tupleExtractionList
         #iterateList = iterateList[0]
-        #print(iterateList)
-        #print(f'iterateList[0]: {iterateList[0]}')
-        #print(f'type of iterateList[0]: {type(iterateList[0])}')
         for literal in iterateList:
-            #print(f'iterate literal: {literal}')
             conjunctsList.append(literal.to_cnf())
-        print("And")
-        print(f'conjunctsList: ~~ {conjunctsList}')
         
         for literal in conjunctsList: #checks for any Or that is inside Or, simplifies to take out the Or            
             if isinstance(literal, And) == True:
-                print(f'checkAgainFlag~~~~~~~~~~~~--------: {checkAndFlag}')
                 checkAndFlag = True
-                #print(self.disjuncts)
-                #print(literal)
                 orLiteralList = []
                 for orLiterals in literal.conjuncts:
                     orLiteralList.append(orLiterals)
                 conjunctsList.extend(orLiteralList)
-                #print(f'copyDisjuncts: {copyConjuncts}')
-                #print(f'literal: {literal}')
                 indexOfLiteral = conjunctsList.index(literal)
                 conjunctsList.pop(indexOfLiteral)
 
@@ -334,12 +253,7 @@ class And(Expr):
             #return And(tuple(conjunctsList))
         
         return And(tuple(conjunctsList))
-        """
-        for literal in self.conjuncts:
-            if isinstance(literal, And) == True:
-                conjunctsList = tuple(self.conjuncts)
-                return And(Or(conjunctsList).to_cnf())
-        """
+
 
         #reverseTuple = list(self.conjuncts)
         #reverseTuple.reverse()
@@ -355,8 +269,7 @@ class Or(Expr):
         return hash((type(self).__name__, self.hashable))
         #pass
     def __eq__(self, other):
-        #print(f'selfDisjunct: {self.disjuncts}')
-        #print(f'other: {other}')
+
         #if self.disjuncts == other.disjuncts:
         #if isinstance(other, Or) == False:
             #return False
@@ -367,13 +280,7 @@ class Or(Expr):
             return False
         #pass
     def __repr__(self):
-        """
-        copyOrSet = self.disjuncts.copy()
-        copyOrList = []
-        for x in copyOrSet:
-            copyOrList.append(next(iter(copyOrSet)))
-            #copyAndList.append(copyAndSet.pop())        
-        """
+
         #print("or ____")
         #print(copyOrList)
         #copyOrList = [next(iter(self.disjuncts)) for _ in self.disjuncts]
@@ -405,30 +312,13 @@ class Or(Expr):
                 if newBool == True: #a literal with a value of True was found, return True
                     return True
                 
-                """
-                if isinstance(literal, dict) == False: #literal is not a dictionary
-                    newBool = literal.evaluate() #evaluating literal should yield a boolean
-                    if newBool == True:
-                        return True
-                if isinstance(literal, dict) == True: #literal is a dictionary
-                    if assignment.get(literal) == True: #a literal with a value of True was found, return True
-                        return True
-                """
+
             #for literal in listAssignment:
                 #if assignment.get(literal) == True: #a literal with a value of True was found, return True
                     #return True
             return False #assuming that not a single True was found in the literals
         
-        """
-        for literal in self.disjuncts:
-            boolList = []
-            if isinstance(literal, Atom) == True:
-                boolExtract = literal.evaluate(assignment)
-                #print("boolExtract")
-                #print(boolExtract)
-                boolList.extend(boolExtract)
-            return boolList
-        """
+
 
         if exprFlag == False: #all entries are just dictionaries (which makes things easier)
             #andKeys = assignment.keys()
@@ -538,23 +428,7 @@ class Or(Expr):
                         distributivityList.append(Or(tuple([literal, andExpr[1]])))
                 print(f'distributivity List: {distributivityList}')
                 return And(tuple(distributivityList))
-            """
-            elif isinstance(andExpr[0], tuple) == False:
-                checkIfAllAndsFlag = True
-                for literal in secondDisjunctsCopy:
-                    if isinstance(literal, And) == False:
-                        checkIfAllAndsFlag = False
-                        
-                        print(f'literal: {literal}')
-                        conjunctsList = list(literal.conjuncts)
-                        print(f'conjunctsList: {conjunctsList}')
-                        print(f'conjunctsList[0]: {conjunctsList[0]}')                        
-                        distributivityList.append(Or(tuple(literal,)))
-                        distributivityList.append(Or(tuple(literal,)))
-                        
-                #print(f'AndTuple: {And(tuple(distributivityList))}')
-                #return And(tuple(distributivityList))
-            """
+
 
         print("checking all literals in Or")
         print(self.disjuncts)
@@ -579,37 +453,9 @@ class Or(Expr):
         return Or(tuple(disjunctsList)).to_cnf()
         #return And(Or(disjunctsList).to_cnf()) #this probably isn't right, but it's the only thing I can think of doing right now.
 
-        
 
         #for literal in copyDisjuncts: #checks for any Or that is inside Or, simplifies to take out the Or
-        """
-        for literal in range(0, len(copyDisjuncts)):
-            if isinstance(copyDisjuncts[literal], Or) == True:
-                print("in or of ORs right now")
-                #print(self.disjuncts)
-                #print(copyDisjuncts[literal])
-                orLiteralList = []
-                for orLiterals in copyDisjuncts[literal].disjuncts:
-                    orLiteralList.append(orLiterals)
-                #disjunctsList = list(self.disjuncts)
-                #literal = tuple(orLiteralList) #disjunctsList.extend(list(literal.disjuncts))
-                copyDisjuncts[literal] = tuple(orLiteralList)
-                #copyDisjuncts[literal] = "crap"
-                #print(literal)
-                #return tuple(disjunctsList)
-            #print(copyDisjuncts[literal])
-            #print(copyDisjuncts)
-        """
-        """
-        #print(copyDisjuncts)
-        return Or(tuple(copyDisjuncts))
 
-        reverseTuple = list(self.disjuncts)
-        reverseTuple.reverse()
-        reverseTuple = tuple(reverseTuple)
-        #return reverseTuple
-        return Or(reverseTuple) #might want to check this
-        """
         #pass
 
 class Implies(Expr):
@@ -801,13 +647,6 @@ def satisfying_assignments(expr):
     #print(satsifyingAssignmentsList)
     return iter(satsifyingAssignmentsList)
 
-    """
-    extractLen = 4
-    bools = [True, False]
-    for x in range(extractLen + 1):
-        for subset in itertools.combinations(bools, x):
-            print(subset)
-    """
 
     #pass
 
