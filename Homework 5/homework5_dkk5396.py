@@ -31,7 +31,12 @@ def load_tokens(email_path):
     #pass
 
 def log_probs(email_paths, smoothing):
-    pass
+    #need to build a dictionary and fill the values with calculations
+    probDict = {}
+    for path in email_paths:
+        emailTokenList = load_tokens(path)
+        #from here, I should iterate through emailTokenList and run the Laplace probabilities and put the results in a dictionary (if the key is not already in the dictionary, I think)
+    #pass
 
 class SpamFilter(object):
 
