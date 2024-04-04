@@ -32,10 +32,21 @@ def load_tokens(email_path):
 
 def log_probs(email_paths, smoothing):
     #need to build a dictionary and fill the values with calculations
+    #floatSmoothing = float(smoothing) #converts string for smoothing into a float, if it is not already a float
+    #print(type(smoothing))
     probDict = {}
+    fullTokenList = []
     for path in email_paths:
         emailTokenList = load_tokens(path)
-        #from here, I should iterate through emailTokenList and run the Laplace probabilities and put the results in a dictionary (if the key is not already in the dictionary, I think)
+        fullTokenList.extend(emailTokenList)
+    
+    #from here, I should iterate through emailTokenList and run the Laplace probabilities and put the results in a dictionary (if the key is not already in the dictionary, I think)
+    # Ok, so after talking to some people, count(w) is just the number of occurances of a single word, which I already knew.
+    # But Sigma count(w') is the count of all unique words, while |V| is just the length of the entire list (or in other words, the count of EVERY word, whether it's unique or not).
+    # And a (which is really alpha) is just the smoothing var.
+    for token in fullTokenList:
+        print("")
+
     #pass
 
 class SpamFilter(object):
