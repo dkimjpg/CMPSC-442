@@ -40,12 +40,11 @@ def log_probs(email_paths, smoothing):
     for path in email_paths:
         emailTokenList = load_tokens(path)
         fullTokenList.extend(emailTokenList)
-    
     fullTokenSet = set(fullTokenList)
     sigmaCount = len(fullTokenSet)       #this is the value of Sigma count(w')
     fullCount = len(fullTokenList)       #this is the value of |V|
-    print(sigmaCount)
-    print(fullCount)
+    #print(sigmaCount)
+    #print(fullCount)
 
     #from here, I should iterate through emailTokenList and run the Laplace probabilities and put the results in a dictionary (if the key is not already in the dictionary, I think)
     # Ok, so after talking to some people, count(w) is just the number of occurances of a single word, which I already knew.
@@ -55,10 +54,9 @@ def log_probs(email_paths, smoothing):
     for token in fullTokenSet: #if this doesn't work well, use fullTokenList
         tokenCount = fullTokenList.count(token) #this is the value of count(w)
         #print(token)
-        #print(smoothing)
-        calcProb = (tokenCount + smoothing) / (sigmaCount + (smoothing * (fullCount + 1))) #this is the equation for P(w)
-        #print(f'calcProb: {calcProb}')
+        calcProb = (tokenCount + smoothing) / (sigmaCount + (smoothing * (fullCount + 1))) #this is the equation for P(w)        
         calcProb = math.log(calcProb)
+        #print(f'calcProb: {calcProb}')
         probDict.update({token: calcProb})
     calcUNK = smoothing / (sigmaCount + (smoothing * (fullCount + 1)))                     #this is the equation for P(<UNK>)
     calcUNK = math.log(calcUNK)
@@ -103,8 +101,10 @@ p = log_probs(paths, 1e-5)
 print(p["the"])
 print(p["line"])
 
+"""
 print("")
 paths = ["homework5_data/train/spam/spam%d" % i for i in range(1, 11)]
 p = log_probs(paths, 1e-5)
 print(p["Credit"])
 print(p["<UNK>"])
+"""
