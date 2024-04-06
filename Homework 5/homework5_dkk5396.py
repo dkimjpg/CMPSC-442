@@ -41,25 +41,33 @@ def log_probs(email_paths, smoothing):
         emailTokenList = load_tokens(path)
         fullTokenList.extend(emailTokenList)
     fullTokenSet = set(fullTokenList)
-    sigmaCount = len(fullTokenSet)       #this is the value of Sigma count(w')
-    fullCount = len(fullTokenList)       #this is the value of |V|
+    sigmaCount = len(fullTokenList)       #this is the value of Sigma count(w')
+    fullCount = len(fullTokenSet)       #this is the value of |V|
     #print(sigmaCount)
     #print(fullCount)
 
     #from here, I should iterate through emailTokenList and run the Laplace probabilities and put the results in a dictionary (if the key is not already in the dictionary, I think)
     # Ok, so after talking to some people, count(w) is just the number of occurances of a single word, which I already knew.
-    # But Sigma count(w') is the count of all unique words, while |V| is just the length of the entire list (or in other words, the count of EVERY word, whether it's unique or not).
+    # But |V| is the count of all unique words, while Sigma count(w') is just the length of the entire list (or in other words, the count of EVERY word, whether it's unique or not).
     # And a (which is really alpha) is just the smoothing var.
     #for token in fullTokenList:
+    sumCount = 0
     for token in fullTokenSet: #if this doesn't work well, use fullTokenList
         tokenCount = fullTokenList.count(token) #this is the value of count(w)
         #print(token)
         calcProb = (tokenCount + smoothing) / (sigmaCount + (smoothing * (fullCount + 1))) #this is the equation for P(w)        
+        #print(calcProb)
+        sumCount = sumCount + calcProb
         calcProb = math.log(calcProb)
         #print(f'calcProb: {calcProb}')
         probDict.update({token: calcProb})
+    #print(sum(probDict.values()))
+    #print(sumCount)
     calcUNK = smoothing / (sigmaCount + (smoothing * (fullCount + 1)))                     #this is the equation for P(<UNK>)
+    sumCount = sumCount + calcUNK
+    #print(sumCount)
     calcUNK = math.log(calcUNK)
+    
     probDict.update({"<UNK>": calcUNK})
     return probDict
     #pass
@@ -101,10 +109,9 @@ p = log_probs(paths, 1e-5)
 print(p["the"])
 print(p["line"])
 
-"""
+
 print("")
 paths = ["homework5_data/train/spam/spam%d" % i for i in range(1, 11)]
 p = log_probs(paths, 1e-5)
 print(p["Credit"])
 print(p["<UNK>"])
-"""
