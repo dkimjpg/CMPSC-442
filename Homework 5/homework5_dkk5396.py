@@ -11,9 +11,9 @@ student_name = "David Kim"
 # Include your imports here, if any are used.
 import email
 import email.iterators
-import email.policy
-from email.policy import default
+#import email.policy
 import math
+import os, os.path
 
 ############################################################
 # Section 1: Spam Filter
@@ -41,7 +41,7 @@ def log_probs(email_paths, smoothing):
         emailTokenList = load_tokens(path)
         fullTokenList.extend(emailTokenList)
     fullTokenSet = set(fullTokenList)
-    sigmaCount = len(fullTokenList)       #this is the value of Sigma count(w')
+    sigmaCount = len(fullTokenList)     #this is the value of Sigma count(w')
     fullCount = len(fullTokenSet)       #this is the value of |V|
     #print(sigmaCount)
     #print(fullCount)
@@ -72,10 +72,20 @@ def log_probs(email_paths, smoothing):
     return probDict
     #pass
 
+def countFilesInDir(dir): #counts the number of files in a directory, and returns the number
+    return len([name for name in os.listdir('.') if os.path.isfile(name)])
+
 class SpamFilter(object):
 
     def __init__(self, spam_dir, ham_dir, smoothing):
-        pass
+        self.spamDict = log_probs(spam_dir, smoothing)
+        self.hamDict = log_probs(ham_dir, smoothing)
+        spamCount = countFilesInDir(spam_dir)
+        hamCount = countFilesInDir(ham_dir)
+
+        calcProb = (tokenCount + smoothing) / (sigmaCount + (smoothing * (fullCount + 1)))
+
+        #pass
     
     def is_spam(self, email_path):
         pass
