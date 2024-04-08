@@ -47,7 +47,7 @@ def log_probs(email_paths, smoothing):
     #print(fullCount)
 
     #from here, I should iterate through emailTokenList and run the Laplace probabilities and put the results in a dictionary (if the key is not already in the dictionary, I think)
-    # Ok, so after talking to some people, count(w) is just the number of occurances of a single word, which I already knew.
+    # Ok, so count(w) is just the number of occurances of a single word, which I already knew.
     # But |V| is the count of all unique words, while Sigma count(w') is just the length of the entire list (or in other words, the count of EVERY word, whether it's unique or not).
     # And a (which is really alpha) is just the smoothing var.
     #for token in fullTokenList:
@@ -83,8 +83,14 @@ class SpamFilter(object):
         spamCount = countFilesInDir(spam_dir)
         hamCount = countFilesInDir(ham_dir)
 
-        calcProb = (tokenCount + smoothing) / (sigmaCount + (smoothing * (fullCount + 1)))
+        #calcSpamProb = (spamCount + smoothing) / ((spamCount + hamCount) + (smoothing * (spamCount + 1)))
+        #calcHamProb = (hamCount + smoothing) / ((spamCount + hamCount) + (smoothing * (hamCount + 1)))
+        
+        calcSpamProb = (spamCount + smoothing) / ((spamCount + hamCount) + spamCount)
+        calcHamProb = (hamCount + smoothing) / ((spamCount + hamCount) + hamCount)
 
+        self.spamProb = calcSpamProb
+        self.hamProb = calcHamProb
         #pass
     
     def is_spam(self, email_path):
