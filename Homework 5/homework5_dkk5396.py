@@ -14,6 +14,8 @@ import email.iterators
 #import email.policy
 import math
 import os, os.path
+#import collections
+from collections import Counter
 
 ############################################################
 # Section 1: Spam Filter
@@ -38,6 +40,7 @@ def log_probs(email_paths, smoothing):
     probDict = {}
     fullTokenList = []
     for path in email_paths:
+        #print(f'path: {path}')
         emailTokenList = load_tokens(path)
         fullTokenList.extend(emailTokenList)
     fullTokenSet = set(fullTokenList)
@@ -52,7 +55,24 @@ def log_probs(email_paths, smoothing):
     # And a (which is really alpha) is just the smoothing var.
     #for token in fullTokenList:
     sumCount = 0
+    #print(len(fullTokenSet))
+
+    fastCount = Counter()
+    fastCount.update(fullTokenList)
+    #print(type(fastCount))
+    fastCount = dict(fastCount)
+    #print(type(fastCount))
+
+    for token in fastCount:
+        tokenCount = fastCount.get(token)
+        calcProb = (tokenCount + smoothing) / (sigmaCount + (smoothing * (fullCount + 1)))
+        calcProb = math.log(calcProb)
+        probDict.update({token: calcProb})
+
+    #old code before I learned how to use Counter() for a faster count(w)
+    """
     for token in fullTokenSet: #if this doesn't work well, use fullTokenList
+        #print(token)
         tokenCount = fullTokenList.count(token) #this is the value of count(w)
         #print(token)
         calcProb = (tokenCount + smoothing) / (sigmaCount + (smoothing * (fullCount + 1))) #this is the equation for P(w)        
@@ -61,6 +81,7 @@ def log_probs(email_paths, smoothing):
         calcProb = math.log(calcProb)
         #print(f'calcProb: {calcProb}')
         probDict.update({token: calcProb})
+    """
     #print(sum(probDict.values()))
     #print(sumCount)
     calcUNK = smoothing / (sigmaCount + (smoothing * (fullCount + 1)))                     #this is the equation for P(<UNK>)
@@ -73,28 +94,85 @@ def log_probs(email_paths, smoothing):
     #pass
 
 def countFilesInDir(dir): #counts the number of files in a directory, and returns the number
-    return len([name for name in os.listdir('.') if os.path.isfile(name)])
+    return len(os.listdir(dir))
+    #return len([name for name in os.listdir('.') if os.path.isfile(name)])
 
 class SpamFilter(object):
 
     def __init__(self, spam_dir, ham_dir, smoothing):
-        self.spamDict = log_probs(spam_dir, smoothing)
-        self.hamDict = log_probs(ham_dir, smoothing)
+        spamDirList = [spam_dir + "/" + directory for directory in os.listdir(spam_dir)]
+        hamDirList = [ham_dir + "/" + directory for directory in os.listdir(ham_dir)]
+        self.spamDict = log_probs(spamDirList, smoothing)
+        self.hamDict = log_probs(hamDirList, smoothing)
         spamCount = countFilesInDir(spam_dir)
         hamCount = countFilesInDir(ham_dir)
 
+        spamSum = sum(self.spamDict.values())
+        hamSum = sum(self.hamDict.values())
+        #for x in self.spamDict:
+            #spamSum = spamSum + self.spamDict[x]
+        #for x in self.hamDict:
+            #hamSum = hamSum + self.hamDict[x]
+        
+        #calcSpamProb = spamSum / spamCount
+        #calcHamProb = hamSum / hamCount
+
+        calcSpamProb = float(spamSum) / (spamCount + hamCount)
+        calcHamProb = float(hamSum) / (spamCount + hamCount)
+
+        """
         #calcSpamProb = (spamCount + smoothing) / ((spamCount + hamCount) + (smoothing * (spamCount + 1)))
         #calcHamProb = (hamCount + smoothing) / ((spamCount + hamCount) + (smoothing * (hamCount + 1)))
         
-        calcSpamProb = (spamCount + smoothing) / ((spamCount + hamCount) + spamCount)
-        calcHamProb = (hamCount + smoothing) / ((spamCount + hamCount) + hamCount)
+        #calcSpamProb = (spamCount + smoothing) / ((spamCount + hamCount) + spamCount)
+        #calcHamProb = (hamCount + smoothing) / ((spamCount + hamCount) + hamCount)
+        """
 
         self.spamProb = calcSpamProb
         self.hamProb = calcHamProb
         #pass
     
     def is_spam(self, email_path):
-        pass
+        #spamProbDict = {}
+        spamCount = 0
+        hamCount = 0
+        freqDict = {}
+        fullTokenList = []
+        """
+        for path in email_path:
+            #print(f'spampath: {path}')
+            emailTokenList = load_tokens(path)
+            fullTokenList.extend(emailTokenList)
+        """
+        fullTokenList = load_tokens(email_path)
+        fullTokenSet = set(fullTokenList)
+
+        for token in fullTokenSet: #if this doesn't work well, use fullTokenList
+            tokenCount = fullTokenList.count(token) #this is the value of count(w)
+            freqDict.update({token: tokenCount})
+        #for token in load_tokens(email_path):
+        fullCount = len(fullTokenSet) #this is the value of |V|
+        for key in freqDict.keys():
+            if key in self.spamDict:
+                spamCount = spamCount + self.spamDict[key] * freqDict[key]
+            else:
+                spamCount = spamCount + self.spamDict["<UNK>"] * freqDict[key]
+            if key in self.hamDict:
+                hamCount = hamCount + self.hamDict[key] * freqDict[key]
+            else:
+                hamCount = hamCount + self.hamDict["<UNK>"] * freqDict[key]
+        
+        spamProbCalc = self.spamProb * spamCount
+        hamProbCalc = self.hamProb * hamCount
+        print(f'spamProbCalc:{spamProbCalc}')
+        print(f'hamProbCalc:{hamProbCalc}')
+        #if spamProbCalc > hamProbCalc:
+            #return True
+        #else:
+            #return False
+        return spamProbCalc > hamProbCalc #figure this out, probably need to use log space calculations, there might be underflow here
+
+        #pass
 
     def most_indicative_spam(self, n):
         pass
@@ -131,3 +209,12 @@ paths = ["homework5_data/train/spam/spam%d" % i for i in range(1, 11)]
 p = log_probs(paths, 1e-5)
 print(p["Credit"])
 print(p["<UNK>"])
+
+print("\nQuestion 4\n")
+sf = SpamFilter("homework5_data/train/spam", "homework5_data/train/ham", 1e-5)
+print(sf.is_spam("homework5_data/train/spam/spam1"))
+print(sf.is_spam("homework5_data/train/spam/spam2"))
+
+sf = SpamFilter("homework5_data/train/spam", "homework5_data/train/ham",  1e-5)
+print(sf.is_spam("homework5_data/train/ham/ham1"))
+print(sf.is_spam("homework5_data/train/ham/ham2"))
