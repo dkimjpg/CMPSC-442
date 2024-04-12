@@ -49,27 +49,27 @@ def log_probs(email_paths, smoothing):
     #print(sigmaCount)
     #print(fullCount)
 
-    #from here, I should iterate through emailTokenList and run the Laplace probabilities and put the results in a dictionary (if the key is not already in the dictionary, I think)
+    #From here, I should iterate through emailTokenList and run the Laplace probabilities and put the results in a dictionary (if the key is not already in the dictionary, I think)
     # Ok, so count(w) is just the number of occurances of a single word, which I already knew.
     # But |V| is the count of all unique words, while Sigma count(w') is just the length of the entire list (or in other words, the count of EVERY word, whether it's unique or not).
     # And a (which is really alpha) is just the smoothing var.
-    #for token in fullTokenList:
-    sumCount = 0
-    #print(len(fullTokenSet))
-
+    
+    #Use Counter() from collections for a faster token count. The old code that iterated through the list I created
+    # and then used .count() to count the total number of tokens took minutes to execute, but using Counter() to create
+    # a Counter object and then putting the entire fullTokenList into it sped up the entire counting process to take only
+    # seconds to execute. A Counter object is basically a dictionary that's optimized for counting, anyway, so I just needed
+    # to convert it into a dict object.
     fastCount = Counter()
     fastCount.update(fullTokenList)
-    #print(type(fastCount))
     fastCount = dict(fastCount)
-    #print(type(fastCount))
 
     for token in fastCount:
-        tokenCount = fastCount.get(token)
-        calcProb = (tokenCount + smoothing) / (sigmaCount + (smoothing * (fullCount + 1)))
+        tokenCount = fastCount.get(token) #this is the value of count(w)
+        calcProb = (tokenCount + smoothing) / (sigmaCount + (smoothing * (fullCount + 1))) #this is the equation for P(w)
         calcProb = math.log(calcProb)
         probDict.update({token: calcProb})
 
-    #old code before I learned how to use Counter() for a faster count(w)
+    #old code that I wrote before I learned how to use Counter() for a faster count(w)
     """
     for token in fullTokenSet: #if this doesn't work well, use fullTokenList
         #print(token)
@@ -82,13 +82,10 @@ def log_probs(email_paths, smoothing):
         #print(f'calcProb: {calcProb}')
         probDict.update({token: calcProb})
     """
-    #print(sum(probDict.values()))
-    #print(sumCount)
+
+    #doing the calculations for <UNK> and adding it to the probDict
     calcUNK = smoothing / (sigmaCount + (smoothing * (fullCount + 1)))                     #this is the equation for P(<UNK>)
-    sumCount = sumCount + calcUNK
-    #print(sumCount)
-    calcUNK = math.log(calcUNK)
-    
+    calcUNK = math.log(calcUNK)    
     probDict.update({"<UNK>": calcUNK})
     return probDict
     #pass
@@ -133,13 +130,9 @@ class SpamFilter(object):
         #pass
     
     def is_spam(self, email_path):
-        #spamProbDict = {}
         spamCount = 0
         hamCount = 0
-        #freqDict = {}
-        fullTokenList = []
         fullTokenList = load_tokens(email_path)
-        #fullTokenSet = set(fullTokenList)
 
         #While going through the entire list of tokens, look at each word and see if it is in the spamDict or the hamDict.
         # If a token is in the spamDict, get the value of the token in spamDict and add it to spamCount, otherwise get the
@@ -147,43 +140,33 @@ class SpamFilter(object):
         # The same should apply for hamCount, check if the token is in hamDict, get value of token in hamDict if it is in
         # hamDict, otherwise, get the value of <UNK> if token is not in hamDict. Whatever the value is, add it to hamCount.
         for token in fullTokenList: 
-            spamCount = spamCount + self.spamDict.get(token, self.spamDict["<UNK>"]) 
-            hamCount = hamCount + self.hamDict.get(token, self.hamDict["<UNK>"])
+            checkSpamDict = self.spamDict.get(token)
+            if checkSpamDict == None: #if token is not in spamDict, get value of <UNK>
+                checkSpamDict = self.spamDict["<UNK>"]
+            spamCount = spamCount + checkSpamDict
+            #spamCount = spamCount + self.spamDict.get(token, self.spamDict["<UNK>"]) 
+            
+            checkHamDict = self.hamDict.get(token)
+            if checkHamDict == None: #if token is not in hamDict, get value of <UNK>
+                checkHamDict = self.hamDict["<UNK>"]
+            hamCount = hamCount + checkHamDict
+            #hamCount = hamCount + self.hamDict.get(token, self.hamDict["<UNK>"])
         
-        """
-        for token in fullTokenSet: #if this doesn't work well, use fullTokenList
-            tokenCount = fullTokenList.count(token) #this is the value of count(w)
-            freqDict.update({token: tokenCount})
-        #for token in load_tokens(email_path):
-        #fullCount = len(fullTokenSet) #this is the value of |V|
-        for key in freqDict.keys():
-            if key in self.spamDict:
-                spamCount = spamCount + self.spamDict[key] * freqDict[key]
-            else:
-                spamCount = spamCount + self.spamDict["<UNK>"] * freqDict[key]
-            if key in self.hamDict:
-                hamCount = hamCount + self.hamDict[key] * freqDict[key]
-            else:
-                hamCount = hamCount + self.hamDict["<UNK>"] * freqDict[key]
-        
-        spamProbCalc = self.spamProb * spamCount
-        hamProbCalc = (1 - self.spamProb) * hamCount
-        print(f'spamProbCalc:{spamProbCalc}')
-        print(f'hamProbCalc:{hamProbCalc}')
-        #if spamProbCalc > hamProbCalc:
-            #return True
-        #else:
-            #return False
-        """
-        #return spamProbCalc > hamProbCalc #figure this out, probably need to use log space calculations, there might be underflow here
-        if spamCount > hamCount:
+        #Compare the spamCount and hamCount now that the results have been received
+        # A larger spamCount suggests that it is more likely that the email is spam, so return True.
+        # But a larger hamCount suggests that it is more likely that the email is not spam, so return False.
+        # In the future, I might want to change this to be more of a ratio type comparison, since there
+        # could be some instances where having a slightly smaller spamCount compared to hamCount may not be
+        # good evidence for concluding that an email is not spam. But this is a naive model for a spam filter,
+        # so I guess this might be intentional?
+        if spamCount > hamCount: 
             return True
         else:
             return False
-        #return spamCount > hamCount
         #pass
 
     def most_indicative_spam(self, n):
+        
         pass
 
     def most_indicative_ham(self, n):
