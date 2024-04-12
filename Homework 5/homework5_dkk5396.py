@@ -108,7 +108,7 @@ class SpamFilter(object):
         hamCount = countFilesInDir(ham_dir)
 
         spamSum = sum(self.spamDict.values())
-        hamSum = sum(self.hamDict.values())
+        #hamSum = sum(self.hamDict.values())
         #for x in self.spamDict:
             #spamSum = spamSum + self.spamDict[x]
         #for x in self.hamDict:
@@ -118,7 +118,7 @@ class SpamFilter(object):
         #calcHamProb = hamSum / hamCount
 
         calcSpamProb = float(spamSum) / (spamCount + hamCount)
-        calcHamProb = float(hamSum) / (spamCount + hamCount)
+        #calcHamProb = float(hamSum) / (spamCount + hamCount)
 
         """
         #calcSpamProb = (spamCount + smoothing) / ((spamCount + hamCount) + (smoothing * (spamCount + 1)))
@@ -129,29 +129,33 @@ class SpamFilter(object):
         """
 
         self.spamProb = calcSpamProb
-        self.hamProb = calcHamProb
+        #self.hamProb = calcHamProb
         #pass
     
     def is_spam(self, email_path):
         #spamProbDict = {}
         spamCount = 0
         hamCount = 0
-        freqDict = {}
+        #freqDict = {}
         fullTokenList = []
-        """
-        for path in email_path:
-            #print(f'spampath: {path}')
-            emailTokenList = load_tokens(path)
-            fullTokenList.extend(emailTokenList)
-        """
         fullTokenList = load_tokens(email_path)
-        fullTokenSet = set(fullTokenList)
+        #fullTokenSet = set(fullTokenList)
 
+        #While going through the entire list of tokens, look at each word and see if it is in the spamDict or the hamDict.
+        # If a token is in the spamDict, get the value of the token in spamDict and add it to spamCount, otherwise get the
+        # value of <UNK> and add it to spamCount.
+        # The same should apply for hamCount, check if the token is in hamDict, get value of token in hamDict if it is in
+        # hamDict, otherwise, get the value of <UNK> if token is not in hamDict. Whatever the value is, add it to hamCount.
+        for token in fullTokenList: 
+            spamCount = spamCount + self.spamDict.get(token, self.spamDict["<UNK>"]) 
+            hamCount = hamCount + self.hamDict.get(token, self.hamDict["<UNK>"])
+        
+        """
         for token in fullTokenSet: #if this doesn't work well, use fullTokenList
             tokenCount = fullTokenList.count(token) #this is the value of count(w)
             freqDict.update({token: tokenCount})
         #for token in load_tokens(email_path):
-        fullCount = len(fullTokenSet) #this is the value of |V|
+        #fullCount = len(fullTokenSet) #this is the value of |V|
         for key in freqDict.keys():
             if key in self.spamDict:
                 spamCount = spamCount + self.spamDict[key] * freqDict[key]
@@ -163,15 +167,20 @@ class SpamFilter(object):
                 hamCount = hamCount + self.hamDict["<UNK>"] * freqDict[key]
         
         spamProbCalc = self.spamProb * spamCount
-        hamProbCalc = self.hamProb * hamCount
+        hamProbCalc = (1 - self.spamProb) * hamCount
         print(f'spamProbCalc:{spamProbCalc}')
         print(f'hamProbCalc:{hamProbCalc}')
         #if spamProbCalc > hamProbCalc:
             #return True
         #else:
             #return False
-        return spamProbCalc > hamProbCalc #figure this out, probably need to use log space calculations, there might be underflow here
-
+        """
+        #return spamProbCalc > hamProbCalc #figure this out, probably need to use log space calculations, there might be underflow here
+        if spamCount > hamCount:
+            return True
+        else:
+            return False
+        #return spamCount > hamCount
         #pass
 
     def most_indicative_spam(self, n):
@@ -218,3 +227,4 @@ print(sf.is_spam("homework5_data/train/spam/spam2"))
 sf = SpamFilter("homework5_data/train/spam", "homework5_data/train/ham",  1e-5)
 print(sf.is_spam("homework5_data/train/ham/ham1"))
 print(sf.is_spam("homework5_data/train/ham/ham2"))
+
