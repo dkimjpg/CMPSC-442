@@ -144,13 +144,11 @@ class SpamFilter(object):
             if checkSpamDict == None: #if token is not in spamDict, get value of <UNK>
                 checkSpamDict = self.spamDict["<UNK>"]
             spamCount = spamCount + checkSpamDict
-            #spamCount = spamCount + self.spamDict.get(token, self.spamDict["<UNK>"]) 
             
             checkHamDict = self.hamDict.get(token)
             if checkHamDict == None: #if token is not in hamDict, get value of <UNK>
                 checkHamDict = self.hamDict["<UNK>"]
             hamCount = hamCount + checkHamDict
-            #hamCount = hamCount + self.hamDict.get(token, self.hamDict["<UNK>"])
         
         #Compare the spamCount and hamCount now that the results have been received
         # A larger spamCount suggests that it is more likely that the email is spam, so return True.
@@ -166,18 +164,79 @@ class SpamFilter(object):
         #pass
 
     def most_indicative_spam(self, n):
-        
-        pass
+        #Since the restriction is set to tokens that appear at least once in both spam and ham (spamDict and hamDict), 
+        # I'll need to do something that takes the intersection of both sets. But I don't actually want to make new sets
+        # again, so I'll try something else.
+
+        intersectKeys = self.spamDict.keys() & self.hamDict.keys()
+        spamIntersectDict = {key: self.spamDict[key] for key in intersectKeys}
+
+        indicateDict = {}
+        for token in spamIntersectDict: 
+            checkSpamDict = self.spamDict.get(token)
+            if checkSpamDict == None: #if token is not in spamDict, get value of <UNK>
+                checkSpamDict = self.spamDict["<UNK>"]
+            #spamCount = spamCount + checkSpamDict
+            
+            checkHamDict = self.hamDict.get(token)
+            if checkHamDict == None: #if token is not in hamDict, get value of <UNK>
+                checkHamDict = self.hamDict["<UNK>"]
+            #hamCount = hamCount + checkHamDict
+            spamCalc = checkSpamDict - checkHamDict
+            indicateDict.update({token: spamCalc})
+        #print(indicateList)
+        indicateCounter = Counter(indicateDict)
+        indicateValues = indicateCounter.most_common(n) #gets the n most indicative words in descending order
+        finalIndicateDict = dict(indicateValues)
+        finalValues = list(finalIndicateDict.keys())
+        return finalValues
+
+        """
+        #print(type(spamIntersectDict))
+        #print(spamIntersectDict)
+        #spamIntersectDict = dict.fromkeys(intersectKeys, self.spamDict.get())
+        spamCounterDict = Counter(spamIntersectDict)#Counter(self.spamDict) #= Counter(intersectKeys)
+        #print(spamCounterDict)
+        hamIntersectDict = {key: self.hamDict[key] for key in intersectKeys}
+        hamCounterDict = Counter(hamIntersectDict)
+        x = list(spamCounterDict.most_common(n))
+        y = list(hamCounterDict.most_common(n))
+        print(x)
+        print(y)
+        """
+
+        #pass
 
     def most_indicative_ham(self, n):
-        pass
+        #same code as most_indicative_spam, but with a few changes from spam to ham for some variables
+        
+        intersectKeys = self.spamDict.keys() & self.hamDict.keys()
+        hamIntersectDict = {key: self.hamDict[key] for key in intersectKeys}
+
+        indicateDict = {}
+        for token in hamIntersectDict: 
+            checkSpamDict = self.spamDict.get(token)
+            if checkSpamDict == None: #if token is not in spamDict, get value of <UNK>
+                checkSpamDict = self.spamDict["<UNK>"]
+            
+            checkHamDict = self.hamDict.get(token)
+            if checkHamDict == None: #if token is not in hamDict, get value of <UNK>
+                checkHamDict = self.hamDict["<UNK>"]
+            hamCalc = checkHamDict - checkSpamDict
+            indicateDict.update({token: hamCalc})
+        indicateCounter = Counter(indicateDict)
+        indicateValues = indicateCounter.most_common(n)
+        finalIndicateDict = dict(indicateValues)
+        finalValues = list(finalIndicateDict.keys())
+        return finalValues
+        #pass
 
 
 
 #####################################################
 # Test Cases
 #####################################################
-
+"""
 print("Question 1\n")
 
 ham_dir = "homework5_data/train/ham/"
@@ -211,3 +270,10 @@ sf = SpamFilter("homework5_data/train/spam", "homework5_data/train/ham",  1e-5)
 print(sf.is_spam("homework5_data/train/ham/ham1"))
 print(sf.is_spam("homework5_data/train/ham/ham2"))
 
+print("\nQuestion 5\n")
+sf = SpamFilter("homework5_data/train/spam", "homework5_data/train/ham",  1e-5)
+print(sf.most_indicative_spam(5))
+sf = SpamFilter("homework5_data/train/spam", "homework5_data/train/ham",  1e-5)
+print(sf.most_indicative_ham(5))
+
+"""
