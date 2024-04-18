@@ -17,7 +17,18 @@ student_name = "Type your full name here."
 ############################################################
 
 def load_corpus(path):
-    pass
+    openMessage = open(path) #, encoding="utf8")
+    corpusList = []
+    for line in openMessage.readlines():
+        currentList = []
+        currentLine = line.split() #split by whitespace, since that's what each entry is separated by
+        for part in currentLine:
+            partList = part.split("=")
+            currentList.append(partList)
+        corpusList.append(currentList)
+    #print(corpusList)
+    return(corpusList)
+    #pass
 
 class Tagger(object):
 
@@ -30,3 +41,13 @@ class Tagger(object):
     def viterbi_tags(self, tokens):
         pass
 
+
+#####################################################
+# Test Cases
+#####################################################
+
+print("Question 1\n")
+c = load_corpus("brown-corpus.txt")
+print(c[1402]) #offset: 2806
+print()
+print(c[1799]) #offset: 3600
