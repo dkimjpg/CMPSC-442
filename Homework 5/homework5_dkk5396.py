@@ -105,28 +105,10 @@ class SpamFilter(object):
         hamCount = countFilesInDir(ham_dir)
 
         spamSum = sum(self.spamDict.values())
-        #hamSum = sum(self.hamDict.values())
-        #for x in self.spamDict:
-            #spamSum = spamSum + self.spamDict[x]
-        #for x in self.hamDict:
-            #hamSum = hamSum + self.hamDict[x]
-        
-        #calcSpamProb = spamSum / spamCount
-        #calcHamProb = hamSum / hamCount
 
         calcSpamProb = float(spamSum) / (spamCount + hamCount)
-        #calcHamProb = float(hamSum) / (spamCount + hamCount)
-
-        """
-        #calcSpamProb = (spamCount + smoothing) / ((spamCount + hamCount) + (smoothing * (spamCount + 1)))
-        #calcHamProb = (hamCount + smoothing) / ((spamCount + hamCount) + (smoothing * (hamCount + 1)))
-        
-        #calcSpamProb = (spamCount + smoothing) / ((spamCount + hamCount) + spamCount)
-        #calcHamProb = (hamCount + smoothing) / ((spamCount + hamCount) + hamCount)
-        """
 
         self.spamProb = calcSpamProb
-        #self.hamProb = calcHamProb
         #pass
     
     def is_spam(self, email_path):

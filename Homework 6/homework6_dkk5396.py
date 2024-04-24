@@ -33,7 +33,9 @@ def load_corpus(path):
 class Tagger(object):
 
     def __init__(self, sentences):
-        pass
+        smoothingProb = 1e-10
+        
+        #pass
 
     def most_probable_tags(self, tokens):
         pass
@@ -51,3 +53,5 @@ c = load_corpus("brown-corpus.txt")
 print(c[1402]) #offset: 2806
 print()
 print(c[1799]) #offset: 3600
+
+print("\nQuestion 2\n")
