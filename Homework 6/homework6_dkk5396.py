@@ -10,7 +10,7 @@ student_name = "Type your full name here."
 
 # Include your imports here, if any are used.
 
-
+import collections
 
 ############################################################
 # Section 1: Hidden Markov Models
@@ -30,11 +30,70 @@ def load_corpus(path):
     return(corpusList)
     #pass
 
+#def getTokens():
+
+def extractTag(line, position):
+    tag = line[position].split("=")
+    tagExtraction = tag[1]
+    return tagExtraction
+
+def extractToken(line, position):
+    token = line[position].split("=")
+    tokenExtraction = token[1]
+    return tokenExtraction
+
+
+TAGS = ('NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'NUM', 'CONJ', 'PRT', '.', 'X')
+
 class Tagger(object):
 
     def __init__(self, sentences):
         smoothingProb = 1e-10
+        self.pi = {}
+        self.alpha = {}
+        self.beta = {}
+
+        #filling all the dictionaries with 0's
+        for tag in TAGS:
+            self.pi[tag] = 0
+            self.alpha[tag] = {}
+            for innerTag in TAGS:
+                self.alpha[tag][innerTag] = 0
+            self.beta[tag] = collections.defaultdict(int) #beta needs a default dict since each tag in beta will be a dictionary with all keys initially set to 0
+
+        #begin counting for pi, alpha, and beta
+        for line in sentences:
+            #pi counting
+            getFirstTag = extractTag(line, 0)
+            self.pi[getFirstTag] += 1
+            #extractTag = line[0].split("=")
+            #extractTag = extractTag[1]
+            #self.pi[extractTag] += 1
+
+            #beta counting for first element in line (this is necessary because the for loop after this skips the first element)
+            getFirstToken = extractToken(line, 0)
+            self.beta[getFirstTag][getFirstToken] += 1
+
+            #alpha counting and beta counting
+            for currentToken in range(1, len(line)):
+                #alpha counting
+                #extractTag = line[currentToken]
+                getTag = extractTag(line, currentToken)
+                getPreviousTag = extractTag(line, currentToken - 1)
+                self.alpha[getPreviousTag][getTag] += 1
+
+                #beta counting
+                getToken = extractToken(line, currentToken)
+                self.beta[getTag][getToken] += 1
+
+                """
+                #Use the following if what I used doesn't work
+                for (token, tag) in sentence:
+                self.b[tag][token] += 1
+                """
+            
         
+
         #pass
 
     def most_probable_tags(self, tokens):
