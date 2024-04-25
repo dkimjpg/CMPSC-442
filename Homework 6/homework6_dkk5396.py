@@ -75,6 +75,8 @@ class Tagger(object):
             self.beta[getFirstTag][getFirstToken] += 1
 
             #alpha counting and beta counting
+
+            #Extra Note: I might have to use Counter() for alpha and beta counting if my implementation is not fast enough. 
             for currentToken in range(1, len(line)):
                 #alpha counting
                 #extractTag = line[currentToken]
@@ -92,6 +94,16 @@ class Tagger(object):
                 self.b[tag][token] += 1
                 """
             
+        #pi smoothing
+        piTotal = sum(self.pi.values()) + (smoothingProb * len(self.pi.keys()))
+        #Use the piTotal calculation below if my implemntation doesn't work
+        #piTotal = 0
+        #for tag in TAGS:
+            #piTotal = self.pi[tag] + smoothingProb
+        for tag in TAGS:
+            self.pi[tag] = float((self.pi[tag] + smoothingProb) / piTotal)
+        
+        #alpha smoothing
         
 
         #pass
