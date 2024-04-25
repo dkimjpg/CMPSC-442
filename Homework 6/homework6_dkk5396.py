@@ -95,16 +95,41 @@ class Tagger(object):
                 """
             
         #pi smoothing
-        piTotal = sum(self.pi.values()) + (smoothingProb * len(self.pi.keys()))
+        #finds total for pi based on pi counting
+        piTotal = sum(self.pi.values()) + (smoothingProb * len(self.pi.keys())) #may or may not need to add 1 to the len(self.pi,keys()) since this is Laplace smoothing
         #Use the piTotal calculation below if my implemntation doesn't work
         #piTotal = 0
         #for tag in TAGS:
             #piTotal = self.pi[tag] + smoothingProb
+        
+        #applies smoothing
         for tag in TAGS:
-            self.pi[tag] = float((self.pi[tag] + smoothingProb) / piTotal)
+            self.pi[tag] = float(float(self.pi[tag] + smoothingProb) / piTotal)
         
         #alpha smoothing
+        #alphaTotal = sum(self.alpha.values()) + (smoothingProb * len(self.pi.keys())) #don't use this, I think I need to use some sort of dictionary comprehension if I want this to work properly
+        #alphaTotal = 0
+        for tag in TAGS:
+            #finds total for alpha based on alpha counting
+            alphaTotal = 0
+            if self.alpha[tag]: #checks if the value for self.alpha[tag] is not empty, or in other words, looks like {}
+                alphaTotal = alphaTotal + sum(self.alpha[tag].values()) + (smoothingProb * len(self.alpha[tag].keys())) #assuming that each dictionary entry has a dictionary within it
+            #alphaTotal = alphaTotal + alphaDictTotal
+            
+            #applies smoothing
+            for innerTag in TAGS:
+                self.alpha[tag][innerTag] = float(float(self.alpha[tag][innerTag] + smoothingProb) / alphaTotal)
         
+        #beta smoothing
+        for tag in TAGS:
+            #finds total for beta based on beta counting
+            betaTotal = smoothingProb
+            if self.beta[tag]:
+                betaTotal = sum(self.beta[tag].values())
+            
+            #applies smoothing
+            for token in self.beta[tag]:
+                self.beta[tag][token] = float(float(self.beta[tag][token] + smoothingProb) / betaTotal)
 
         #pass
 
