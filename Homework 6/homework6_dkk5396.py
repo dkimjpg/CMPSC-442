@@ -93,7 +93,10 @@ class Tagger(object):
                 for (token, tag) in sentence:
                 self.b[tag][token] += 1
                 """
-            
+        #counting for pi, alpha, and beta end here.
+        
+
+        #Begin the smoothing algorithms
         #pi smoothing
         #finds total for pi based on pi counting
         piTotal = sum(self.pi.values()) + (smoothingProb * len(self.pi.keys())) #may or may not need to add 1 to the len(self.pi,keys()) since this is Laplace smoothing
@@ -106,6 +109,7 @@ class Tagger(object):
         for tag in TAGS:
             self.pi[tag] = float(float(self.pi[tag] + smoothingProb) / piTotal)
         
+
         #alpha smoothing
         #alphaTotal = sum(self.alpha.values()) + (smoothingProb * len(self.pi.keys())) #don't use this, I think I need to use some sort of dictionary comprehension if I want this to work properly
         #alphaTotal = 0
@@ -120,6 +124,7 @@ class Tagger(object):
             for innerTag in TAGS:
                 self.alpha[tag][innerTag] = float(float(self.alpha[tag][innerTag] + smoothingProb) / alphaTotal)
         
+
         #beta smoothing
         for tag in TAGS:
             #finds total for beta based on beta counting
@@ -134,7 +139,22 @@ class Tagger(object):
         #pass
 
     def most_probable_tags(self, tokens):
-        pass
+        probableList = []
+        for token in tokens:
+            probableVal = -1
+            currentVal = 0
+            probableTag = ''
+            for tag in TAGS:
+                if token in self.beta[tag]:
+                    currentVal = self.beta[tag][token]
+                else:
+                    currentVal = self.beta[tag]["<UNK>"]
+                if currentVal > probableVal:
+                    probableVal = currentVal
+                    probableTag = tag
+                probableList.append(probableTag)
+                
+        #pass
 
     def viterbi_tags(self, tokens):
         pass
