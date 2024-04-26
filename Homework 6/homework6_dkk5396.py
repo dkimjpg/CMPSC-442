@@ -59,8 +59,7 @@ def extractToken(line, position):
     tokenExtraction = token[0]
     return tokenExtraction
 
-
-
+TAGS = ('NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'NUM', 'CONJ', 'PRT', '.', 'X')
 
 class Tagger(object):
     
@@ -70,7 +69,7 @@ class Tagger(object):
         self.alpha = {}
         self.beta = {}
         
-        TAGS = ('NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'NUM', 'CONJ', 'PRT', '.', 'X')
+        #TAGS = ('NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'NUM', 'CONJ', 'PRT', '.', 'X')
         #filling all the dictionaries with 0's
         for tag in TAGS:
             self.pi[tag] = 0
@@ -162,25 +161,18 @@ class Tagger(object):
         #pass
 
     def most_probable_tags(self, tokens):
-        TAGS = ('NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'NUM', 'CONJ', 'PRT', '.', 'X')
+        
         probableList = []
         for token in tokens:
             probableVal = -1
             currentVal = 0
             probableTag = ''
-            #print(token)
-            #print(self.beta)
-            #print()
-            for tag in TAGS:
-                #print(self.beta[tag])
-                #print(bool(token in self.beta[tag]))
-                
+            for tag in TAGS:                
                 if token in self.beta[tag]:
-                    #print("\ngot here")
                     currentVal = self.beta[tag][token]
                 else:
-                    #print("\in here instead")
                     currentVal = self.beta[tag]["<UNK>"]
+                
                 if currentVal > probableVal:
                     probableVal = currentVal
                     probableTag = tag
@@ -189,22 +181,81 @@ class Tagger(object):
         #pass
 
     def viterbi_tags(self, tokens):
-        pass
+        delta = [[0.0 for xtag in TAGS] for xtoken in tokens]
+        backPoint = [[0 for xtag in TAGS] for xtoken in tokens]
+
+        for tag in range(0, len(TAGS)):
+            currentTag = TAGS[tag]
+            back = 0
+            if tokens[0] in self.beta[currentTag]:
+                back = self.beta[currentTag][tokens[0]]
+            else:
+                back = self.beta[currentTag]["<UNK>"]
+            delta[0][tag] = self.pi[currentTag] * back
+        
+        for token in range(1, len(tokens)):
+            for tag in range(0, len(TAGS)):
+                probableVal = -1
+                probableTagIndex = 0
+                for innerTag in range(0, len(TAGS)):
+                    firstTag = TAGS[innerTag]
+                    secondTag = TAGS[tag]
+                    calcVal = delta[token - 1][innerTag] * self.alpha[firstTag][secondTag]
+
+                    if calcVal > probableVal:
+                        probableVal = calcVal
+                        probableTagIndex = innerTag
+                backPoint[token][tag] = probableTagIndex #logs the tag index that should be pointed back to
+                secondTag = TAGS[tag]
+                back = 0
+                if tokens[token] in self.beta[secondTag]:
+                    back = self.beta[secondTag][tokens[token]]
+                else:
+                    back = self.beta[secondTag]["<UNK>"]
+                delta[token][tag] = probableVal * back
+
+        probableTagIndex = 0
+        probableVal = -1
+        probableList = []
+        for tag in range(0, len(TAGS)):
+            if delta[-1][tag] > probableVal:
+                probableVal = delta[-1][tag]
+                probableTagIndex = tag
+        probableList.append(TAGS[probableTagIndex])
+        previousPoint = probableTagIndex
+        for point in range(len(tokens) - 2, -1, -1):
+            previousPoint = backPoint[point + 1][previousPoint]
+            probableList.append(TAGS[previousPoint])
+        
+        return list(reversed(probableList))
+
+        #pass
 
 
 #####################################################
 # Test Cases
 #####################################################
-"""
+
 print("Question 1\n")
 c = load_corpus("brown-corpus.txt")
-print(c[1402]) #offset: 2806
+print(c[1402])
 print()
-print(c[1799]) #offset: 3600
+print(c[1799])
 
 print("\nQuestion 3\n")
 c = load_corpus("brown-corpus.txt")
 t = Tagger(c)
 print(t.most_probable_tags(["The", "man", "walks", "."]))
 print(t.most_probable_tags(["The", "blue", "bird", "sings"]))
-"""
+
+print("\nQuestion 4\n")
+c = load_corpus("brown-corpus.txt")
+t = Tagger(c)
+s = "I am waiting to reply".split()
+print(t.most_probable_tags(s))
+print(t.viterbi_tags(s))
+print()
+
+s = "I saw the play".split()
+print(t.most_probable_tags(s))
+print(t.viterbi_tags(s))
