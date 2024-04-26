@@ -33,13 +33,14 @@ def load_corpus(path):
 #def getTokens():
 
 def extractTag(line, position):
-    tag = line[position].split("=")
+    tag = line[position]#.split("=")
+    #print(tag)
     tagExtraction = tag[1]
     return tagExtraction
 
 def extractToken(line, position):
-    token = line[position].split("=")
-    tokenExtraction = token[1]
+    token = line[position]#.split("=")
+    tokenExtraction = token[0]
     return tokenExtraction
 
 
@@ -60,6 +61,8 @@ class Tagger(object):
             for innerTag in TAGS:
                 self.alpha[tag][innerTag] = 0
             self.beta[tag] = collections.defaultdict(int) #beta needs a default dict since each tag in beta will be a dictionary with all keys initially set to 0
+        #print(self.beta)
+        #print()
 
         #begin counting for pi, alpha, and beta
         for line in sentences:
@@ -86,6 +89,8 @@ class Tagger(object):
 
                 #beta counting
                 getToken = extractToken(line, currentToken)
+                #print(getToken)
+                #print(currentToken)
                 self.beta[getTag][getToken] += 1
 
                 """
@@ -93,8 +98,11 @@ class Tagger(object):
                 for (token, tag) in sentence:
                 self.b[tag][token] += 1
                 """
+            
         #counting for pi, alpha, and beta end here.
-        
+        #print(f'self.pi: {self.pi}')
+        #print(f'self.alpha: {self.alpha}')
+        #print(f'self.beta: {self.beta}')
 
         #Begin the smoothing algorithms
         #pi smoothing
@@ -131,10 +139,12 @@ class Tagger(object):
             betaTotal = smoothingProb
             if self.beta[tag]:
                 betaTotal = sum(self.beta[tag].values())
-            
+            #for token in self.beta[tag]:
+                #betaTotal += self.beta[tag][token]
             #applies smoothing
             for token in self.beta[tag]:
                 self.beta[tag][token] = float(float(self.beta[tag][token] + smoothingProb) / betaTotal)
+            self.beta[tag]["<UNK>"] = smoothingProb / betaTotal
 
         #pass
 
@@ -144,16 +154,24 @@ class Tagger(object):
             probableVal = -1
             currentVal = 0
             probableTag = ''
+            #print(token)
+            #print(self.beta)
+            #print()
             for tag in TAGS:
+                #print(self.beta[tag])
+                #print(bool(token in self.beta[tag]))
+                
                 if token in self.beta[tag]:
+                    #print("\ngot here")
                     currentVal = self.beta[tag][token]
                 else:
+                    #print("\in here instead")
                     currentVal = self.beta[tag]["<UNK>"]
                 if currentVal > probableVal:
                     probableVal = currentVal
                     probableTag = tag
-                probableList.append(probableTag)
-                
+            probableList.append(probableTag)
+        return probableList
         #pass
 
     def viterbi_tags(self, tokens):
@@ -170,4 +188,8 @@ print(c[1402]) #offset: 2806
 print()
 print(c[1799]) #offset: 3600
 
-print("\nQuestion 2\n")
+print("\nQuestion 3\n")
+c = load_corpus("brown-corpus.txt")
+t = Tagger(c)
+print(t.most_probable_tags(["The", "man", "walks", "."]))
+print(t.most_probable_tags(["The", "blue", "bird", "sings"]))
