@@ -69,7 +69,6 @@ class Tagger(object):
         self.alpha = {}
         self.beta = {}
         
-        #TAGS = ('NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'NUM', 'CONJ', 'PRT', '.', 'X')
         #filling all the dictionaries with 0's
         for tag in TAGS:
             self.pi[tag] = 0
@@ -77,17 +76,12 @@ class Tagger(object):
             for innerTag in TAGS:
                 self.alpha[tag][innerTag] = 0
             self.beta[tag] = defaultdict(int) #beta needs a default dict since each tag in beta will be a dictionary with all keys initially set to 0
-        #print(self.beta)
-        #print()
 
         #begin counting for pi, alpha, and beta
         for line in sentences:
             #pi counting
             getFirstTag = extractTag(line, 0)
             self.pi[getFirstTag] += 1
-            #extractTag = line[0].split("=")
-            #extractTag = extractTag[1]
-            #self.pi[extractTag] += 1
 
             #beta counting for first element in line (this is necessary because the for loop after this skips the first element)
             getFirstToken = extractToken(line, 0)
@@ -98,7 +92,6 @@ class Tagger(object):
             #Extra Note: I might have to use Counter() for alpha and beta counting if my implementation is not fast enough. 
             for currentToken in range(1, len(line)):
                 #alpha counting
-                #extractTag = line[currentToken]
                 getTag = extractTag(line, currentToken)
                 getPreviousTag = extractTag(line, currentToken - 1)
                 self.alpha[getPreviousTag][getTag] += 1
@@ -106,24 +99,14 @@ class Tagger(object):
                 #beta counting
                 getToken = extractToken(line, currentToken)
                 self.beta[getTag][getToken] += 1
-                
-                #Use the following if what I used doesn't work
-                #for (token, tag) in sentence:
-                    #self.b[tag][token] += 1                
-            
+                            
         #counting for pi, alpha, and beta end here.
-        #print(f'self.pi: {self.pi}')
-        #print(f'self.alpha: {self.alpha}')
-        #print(f'self.beta: {self.beta}')
+
 
         #Begin the smoothing algorithms
         #pi smoothing
         #finds total for pi based on pi counting
         piTotal = sum(self.pi.values()) + (smoothingProb * len(self.pi.keys())) #may or may not need to add 1 to the len(self.pi,keys()) since this is Laplace smoothing
-        #Use the piTotal calculation below if my implemntation doesn't work
-        #piTotal = 0
-        #for tag in TAGS:
-            #piTotal = self.pi[tag] + smoothingProb
         
         #applies smoothing
         for tag in TAGS:
@@ -131,14 +114,11 @@ class Tagger(object):
         
 
         #alpha smoothing
-        #alphaTotal = sum(self.alpha.values()) + (smoothingProb * len(self.pi.keys())) #don't use this, I think I need to use some sort of dictionary comprehension if I want this to work properly
-        #alphaTotal = 0
         for tag in TAGS:
             #finds total for alpha based on alpha counting
             alphaTotal = 0
             if self.alpha[tag]: #checks if the value for self.alpha[tag] is not empty, or in other words, looks like {}
                 alphaTotal = alphaTotal + sum(self.alpha[tag].values()) + (smoothingProb * len(self.alpha[tag].keys())) #assuming that each dictionary entry has a dictionary within it
-            #alphaTotal = alphaTotal + alphaDictTotal
             
             #applies smoothing
             for innerTag in TAGS:
@@ -151,8 +131,6 @@ class Tagger(object):
             betaTotal = smoothingProb
             if self.beta[tag]:
                 betaTotal = sum(self.beta[tag].values())
-            #for token in self.beta[tag]:
-                #betaTotal += self.beta[tag][token]
             #applies smoothing
             for token in self.beta[tag]:
                 self.beta[tag][token] = float(float(self.beta[tag][token] + smoothingProb) / betaTotal)
@@ -160,20 +138,22 @@ class Tagger(object):
 
         #pass
 
-    def most_probable_tags(self, tokens):
-        
+    def most_probable_tags(self, tokens):        
         probableList = []
+
+        #loop through all the tokens, and for each token, check every single tag to get the most probable 
+        #tag for that token. Then append it into the probableList.
         for token in tokens:
             probableVal = -1
             currentVal = 0
             probableTag = ''
             for tag in TAGS:                
-                if token in self.beta[tag]:
+                if token in self.beta[tag]: #check if the token is in the beta probabilities, if not, set it as a <UNK> since it's unknown
                     currentVal = self.beta[tag][token]
                 else:
                     currentVal = self.beta[tag]["<UNK>"]
                 
-                if currentVal > probableVal:
+                if currentVal > probableVal: #compare the current value with the chosen probable value, and if the current value is larger, make it the new probable value
                     probableVal = currentVal
                     probableTag = tag
             probableList.append(probableTag)
@@ -181,18 +161,23 @@ class Tagger(object):
         #pass
 
     def viterbi_tags(self, tokens):
-        delta = [[0.0 for xtag in TAGS] for xtoken in tokens]
+        #initialize two 2d lists with 0's and 0.0's
+        #viterbi is a list that will be used in conjunction with the viterbi algorithm. It's more convenient to use a 2d list for this.
+        #backPoint is the list that will be used to keep track of backpointers
+        viterbi = [[0.0 for xtag in TAGS] for xtoken in tokens]
         backPoint = [[0 for xtag in TAGS] for xtoken in tokens]
 
+        #Starting node of the HMM
         for tag in range(0, len(TAGS)):
             currentTag = TAGS[tag]
             back = 0
-            if tokens[0] in self.beta[currentTag]:
+            if tokens[0] in self.beta[currentTag]: #check if the token is in the beta probabilities, if not, set it as a <UNK> since it's unknown
                 back = self.beta[currentTag][tokens[0]]
             else:
                 back = self.beta[currentTag]["<UNK>"]
-            delta[0][tag] = self.pi[currentTag] * back
+            viterbi[0][tag] = self.pi[currentTag] * back
         
+        #all other nodes in the HMM
         for token in range(1, len(tokens)):
             for tag in range(0, len(TAGS)):
                 probableVal = -1
@@ -200,7 +185,7 @@ class Tagger(object):
                 for innerTag in range(0, len(TAGS)):
                     firstTag = TAGS[innerTag]
                     secondTag = TAGS[tag]
-                    calcVal = delta[token - 1][innerTag] * self.alpha[firstTag][secondTag]
+                    calcVal = viterbi[token - 1][innerTag] * self.alpha[firstTag][secondTag]
 
                     if calcVal > probableVal:
                         probableVal = calcVal
@@ -208,27 +193,30 @@ class Tagger(object):
                 backPoint[token][tag] = probableTagIndex #logs the tag index that should be pointed back to
                 secondTag = TAGS[tag]
                 back = 0
-                if tokens[token] in self.beta[secondTag]:
+                if tokens[token] in self.beta[secondTag]: #check if the token is in the beta probabilities, if not, set it as a <UNK> since it's unknown
                     back = self.beta[secondTag][tokens[token]]
                 else:
                     back = self.beta[secondTag]["<UNK>"]
-                delta[token][tag] = probableVal * back
+                viterbi[token][tag] = probableVal * back
 
+        #begin setting up for backtracking
         probableTagIndex = 0
         probableVal = -1
         probableList = []
+
         for tag in range(0, len(TAGS)):
-            if delta[-1][tag] > probableVal:
-                probableVal = delta[-1][tag]
+            if viterbi[-1][tag] > probableVal: #compares the last element's values to the currently chosen probable value and sets new probable value to the highest of the last element's values
+                probableVal = viterbi[-1][tag]
                 probableTagIndex = tag
         probableList.append(TAGS[probableTagIndex])
         previousPoint = probableTagIndex
-        for point in range(len(tokens) - 2, -1, -1):
+
+        #backtracking starts here
+        for point in range(len(tokens) - 2, -1, -1): #need to count down instead of up for easier backtracking
             previousPoint = backPoint[point + 1][previousPoint]
             probableList.append(TAGS[previousPoint])
         
         return list(reversed(probableList))
-
         #pass
 
 
