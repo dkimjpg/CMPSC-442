@@ -2,7 +2,7 @@
 # CMPSC 442: Hidden Markov Models
 ############################################################
 
-student_name = "Type your full name here."
+student_name = "David Kim"
 
 ############################################################
 # Imports
@@ -10,15 +10,21 @@ student_name = "Type your full name here."
 
 # Include your imports here, if any are used.
 
-import collections
+#import collections
+from collections import defaultdict
 
 ############################################################
 # Section 1: Hidden Markov Models
 ############################################################
 
 def load_corpus(path):
-    openMessage = open(path) #, encoding="utf8")
+    #openMessage = open(path) #, encoding="utf8")
     corpusList = []
+    #The code below was previously used and worked successfully during testing, but when uploading this 
+    # file to Gradescope, Gradescope's autograder would continuously fail to execute correctly. This code
+    # still works, but since it is unusable on Gradescope, it was replaced with an alternative implementation.
+    # I think the problem may be with openMessage.readlines(), Gradescope may not be able to properly run that code.
+    """
     for line in openMessage.readlines():
         currentList = []
         currentLine = line.split() #split by whitespace, since that's what each entry is separated by
@@ -26,7 +32,17 @@ def load_corpus(path):
             partList = part.split("=")
             currentList.append(partList)
         corpusList.append(currentList)
-    #print(corpusList)
+    """
+    
+    #The following code to open the file actually works, so this will be used.
+    with open(path) as file:
+        for line in file:
+            currentList = []
+            for part in line.split(): #split by whitespace, since that's what each entry is separated by
+                partList = part.split("=")
+                currentList.append(tuple(partList))
+            corpusList.append(currentList)
+    
     return(corpusList)
     #pass
 
@@ -44,23 +60,24 @@ def extractToken(line, position):
     return tokenExtraction
 
 
-TAGS = ('NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'NUM', 'CONJ', 'PRT', '.', 'X')
+
 
 class Tagger(object):
-
+    
     def __init__(self, sentences):
         smoothingProb = 1e-10
         self.pi = {}
         self.alpha = {}
         self.beta = {}
-
+        
+        TAGS = ('NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'NUM', 'CONJ', 'PRT', '.', 'X')
         #filling all the dictionaries with 0's
         for tag in TAGS:
             self.pi[tag] = 0
             self.alpha[tag] = {}
             for innerTag in TAGS:
                 self.alpha[tag][innerTag] = 0
-            self.beta[tag] = collections.defaultdict(int) #beta needs a default dict since each tag in beta will be a dictionary with all keys initially set to 0
+            self.beta[tag] = defaultdict(int) #beta needs a default dict since each tag in beta will be a dictionary with all keys initially set to 0
         #print(self.beta)
         #print()
 
@@ -89,15 +106,11 @@ class Tagger(object):
 
                 #beta counting
                 getToken = extractToken(line, currentToken)
-                #print(getToken)
-                #print(currentToken)
                 self.beta[getTag][getToken] += 1
-
-                """
+                
                 #Use the following if what I used doesn't work
-                for (token, tag) in sentence:
-                self.b[tag][token] += 1
-                """
+                #for (token, tag) in sentence:
+                    #self.b[tag][token] += 1                
             
         #counting for pi, alpha, and beta end here.
         #print(f'self.pi: {self.pi}')
@@ -149,6 +162,7 @@ class Tagger(object):
         #pass
 
     def most_probable_tags(self, tokens):
+        TAGS = ('NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'NUM', 'CONJ', 'PRT', '.', 'X')
         probableList = []
         for token in tokens:
             probableVal = -1
@@ -181,7 +195,7 @@ class Tagger(object):
 #####################################################
 # Test Cases
 #####################################################
-
+"""
 print("Question 1\n")
 c = load_corpus("brown-corpus.txt")
 print(c[1402]) #offset: 2806
@@ -193,3 +207,4 @@ c = load_corpus("brown-corpus.txt")
 t = Tagger(c)
 print(t.most_probable_tags(["The", "man", "walks", "."]))
 print(t.most_probable_tags(["The", "blue", "bird", "sings"]))
+"""
