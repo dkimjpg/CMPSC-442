@@ -43,7 +43,9 @@ And in case I haven't made myself clear already...
 **I'm looking for a job, so if you're reading this and you're recruiting...**
 # Hire me already![^1]
 If you haven't already seen my email on my profile page, it's the following:
+
 dkkim00ca@gmail.com
+
 If you do end up sending an email after reading through this markdown file, try to mention it so I won't think it's another spam email from a non-existent recruiter.
 And if I ever do get hired, I'll make sure to update this with the date I get a job.
 
