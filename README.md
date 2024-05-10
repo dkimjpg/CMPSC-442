@@ -35,3 +35,16 @@ but it's not something I can really put on here since it doesn't belong to me.
 
 Well, now that I've finished all the assignments for this course, they were all really tough. I'm not sure how other AI companies actually implement their AI models, but I hope this is a good starting point for me to
 get experience with AI. Other than that, I just have the final exam left to cover. Hopefully, that will go well.
+
+The final exam went a lot better than I thought. Kinda impressed with my efforts, actually. I ended up going from what was originally around a 50 in the class to a 82, which was a really impressive comeback, in my opinion. I really had to work hard for the last two assignments, which were based on Probabilistic Agents and Hidden Markov Models. Anyway, I hope that this experience really does come in handy, since I'm still searching for a job as of this moment in time (which should be 5/10/2024). Yeah, I'm kind of updating this after my graduation, but I just wanted to leave a parting note since I'm finally done with this repo.
+
+And in case I haven't made myself clear already...
+
+**I'm looking for a job, so if you're reading this and you're recruiting...**
+# Hire me already![^1]
+If you haven't already seen my email on my profile page, it's the following:
+dkkim00ca@gmail.com
+If you do end up sending an email after reading through this markdown file, try to mention it so I won't think it's another spam email from a non-existent recruiter.
+And if I ever do get hired, I'll make sure to update this with the date I get a job.
+
+[^1]: pretty please?
